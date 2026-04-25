@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}View Members{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Library Members</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('auto_check_expiry') }}" class="btn btn-sm btn-outline-warning me-2">
+            Check Expiry
+        </a>
+        <a href="{{ url_for('membership_calendar') }}" class="btn btn-sm btn-outline-info me-2">
+            View Calendar
+        </a>
+        <a href="{{ url_for('register_member') }}" class="btn btn-sm btn-primary">
+            Register New Member
+        </a>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary" id="selectAllBtn">
+                <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button type="submit" class="btn btn-outline-success" form="bulkRenewForm">
+                <i class="fas fa-calendar-plus"></i> Renew Selected
+            </button>
+            <button type="button" class="btn btn-outline-danger" id="bulkDeleteBtn">
+                <i class="fas fa-trash"></i> Delete Selected
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Operations Forms -->
+<form id="bulkRenewForm" method="POST" action="{{ url_for('bulk_renew') }}">
+    <!-- Checkboxes will be added here by JavaScript -->
+</form>
+
+<form id="bulkDeleteForm" method="POST" action="{{ url_for('bulk_delete') }}" style="display: none;">
+    <!-- Checkboxes will be added here by JavaScript -->
+</form>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th width="50">
+                            <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
+                        <th>Member ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Membership Type</th>
+                        <th>Registration Date</th>
+                        <th>Expiry Date</th>
+                        <th>Days Left</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="member_ids" value="{{ member.id }}"
+                                class="form-check-input member-checkbox">
+                        </td>
+                        <td>{{ member.member_id }}</td>
+                        <td>{{ member.full_name }}</td>
+                        <td>{{ member.email }}</td>
+                        <td>{{ member.phone }}</td>
+                        <td>
+                            {% if member.membership_type == 'monthly' %}
+                            Monthly (K90)
+                            {% else %}
+                            Six Months (K500)
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if member.registration_date %}
+                            {{ member.registration_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if member.expiry_date %}
+                            {{ member.expiry_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if member.expiry_date %}
+                            {# Convert both dates to date objects for comparison #}
+                            {% set expiry_date = member.expiry_date.date() if member.expiry_date.__class__.__name__
+                            == 'datetime' else member.expiry_date %}
+                            {% set today = now.date() %}
+                            {% set days_left = (expiry_date - today).days %}
+                            {% if days_left > 0 %}
+                            <span class="badge bg-success">{{ days_left }} days</span>
+                            {% elif days_left == 0 %}
+                            <span class="badge bg-warning">Today</span>
+                            {% else %}
+                            <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                            {% else %}
+                            <span class="badge bg-secondary">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if member.status == 'active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('print_id', member_id=member.id) }}" class="btn btn-outline-primary"
+                                    title="Print ID Card">
+                                    <i class="fas fa-id-card"></i> ID
+                                </a>
+                                <a href="{{ url_for('view_receipt', member_id=member.id) }}"
+                                    class="btn btn-outline-info" title="View Receipt">
+                                    <i class="fas fa-receipt"></i> View
+                                </a>
+                                <a href="{{ url_for('member_details', member_id=member.id) }}"
+                                    class="btn btn-outline-secondary" title="Member Details">
+                                    <i class="fas fa-eye"></i> Details
+                                </a>
+                                <a href="{{ url_for('renew_member', member_id=member.id) }}"
+                                    class="btn btn-outline-warning" title="Renew Membership">
+                                    <i class="fas fa-sync-alt"></i> Renew
+                                </a>
+                                <!-- Delete Button -->
+                                <form method="POST" action="{{ url_for('delete_member', member_id=member.id) }}"
+                                    style="display: inline;">
+                                    <button type="submit" class="btn btn-outline-danger" title="Delete Member"
+                                        onclick="return confirm('Are you sure you want to delete {{ member.full_name }}? This action cannot be undone!')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="11" class="text-center text-muted py-4">
+                            <i class="fas fa-users fa-2x mb-3"></i>
+                            <p>No members found. <a href="{{ url_for('register_member') }}">Register the first
+                                    member</a></p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">{{ members|length }}</h5>
+                <p class="card-text">Total Members</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">{{ active_members_count }}</h5>
+                <p class="card-text">Active Members</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">{{ expiring_soon_count }}</h5>
+                <p class="card-text">Expiring Soon</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">{{ expired_members_count }}</h5>
+                <p class="card-text">Expired Members</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Select all checkbox functionality
+        const selectAll = document.getElementById('selectAll');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+        const bulkRenewForm = document.getElementById('bulkRenewForm');
+        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+
+        // Select All checkbox functionality
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                memberCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAll.checked;
+                });
+                updateBulkRenewForm();
+            });
+
+            // Update select all when individual checkboxes change
+            memberCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    const allChecked = Array.from(memberCheckboxes).every(cb => cb.checked);
+                    selectAll.checked = allChecked;
+                    updateBulkRenewForm();
+                });
+            });
+        }
+
+        // Select All button functionality
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function () {
+                const isChecked = !selectAll.checked;
+                selectAll.checked = isChecked;
+                memberCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+                updateBulkRenewForm();
+            });
+        }
+
+        // Bulk Delete button functionality
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.addEventListener('click', function () {
+                const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
+                if (selectedMembers.length === 0) {
+                    alert('Please select at least one member to delete.');
+                    return;
+                }
+
+                if (confirm(`Are you sure you want to delete ${selectedMembers.length} member(s)? This action cannot be undone!`)) {
+                    // Clear any existing inputs
+                    bulkDeleteForm.innerHTML = '';
+
+                    // Add selected member IDs
+                    selectedMembers.forEach(checkbox => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'member_ids';
+                        input.value = checkbox.value;
+                        bulkDeleteForm.appendChild(input);
+                    });
+
+                    bulkDeleteForm.submit();
+                }
+            });
+        }
+
+        // Update bulk renew form with selected checkboxes
+        function updateBulkRenewForm() {
+            // Clear existing inputs
+            bulkRenewForm.innerHTML = '';
+
+            // Add selected member IDs
+            memberCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'member_ids';
+                    input.value = checkbox.value;
+                    bulkRenewForm.appendChild(input);
+                }
+            });
+        }
+
+        // Initialize the bulk renew form
+        updateBulkRenewForm();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZCAS University External Library - {% block title %}{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <style>
+        :root {
+            --zcas-primary: #1E3A8A;
+            --zcas-secondary: #DC2626;
+            --zcas-accent: #059669;
+            --zcas-light: #EFF6FF;
+            --zcas-dark: #1E3A8A;
+        }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--zcas-primary) 0%, #2D4BA8 100%) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .navbar-logo {
+            height: 35px;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--zcas-primary) 0%, #2D4BA8 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1E3A8A 0%, #3A56C4 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header.bg-primary {
+            background: linear-gradient(135deg, var(--zcas-primary) 0%, #2D4BA8 100%) !important;
+        }
+
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #EFF6FF !important;
+        }
+
+        /* Calendar styles */
+        .fc-event {
+            cursor: pointer;
+        }
+
+        .calendar-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.5rem !important;
+            font-weight: 600;
+        }
+
+        .fc-button-primary {
+            background-color: var(--zcas-primary) !important;
+            border-color: var(--zcas-primary) !important;
+        }
+
+        .fc-button-primary:hover {
+            background-color: #2D4BA8 !important;
+            border-color: #2D4BA8 !important;
+        }
+
+        .fc-day-today {
+            background-color: rgba(30, 58, 138, 0.1) !important;
+        }
+
+        /* Scan button specific styling */
+        .nav-link.scan-link {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-left: 5px;
+        }
+
+        .nav-link.scan-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white !important;
+        }
+
+        @media (max-width: 991px) {
+            .nav-link.scan-link {
+                margin-left: 0;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand"
+                href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ZCAS University Library Logo"
+                    class="navbar-logo" onerror="this.style.display='none'">
+                ZCAS University External Library System
+            </a>
+
+            {% if current_user.is_authenticated %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="{{ url_for('calendar_view') }}">
+                        <i class="fas fa-calendar-alt"></i> Calendar
+                    </a>
+                    <a class="nav-link" href="{{ url_for('register_member') }}">
+                        <i class="fas fa-user-plus"></i> Register Member
+                    </a>
+                    <a class="nav-link" href="{{ url_for('view_members') }}">
+                        <i class="fas fa-users"></i> View Members
+                    </a>
+                    <a class="nav-link scan-link" href="{{ url_for('scan_member') }}">
+                        <i class="fas fa-qrcode"></i> Scan Member
+                    </a>
+                    <a class="nav-link" href="{{ url_for('init_admin') }}">
+                        <i class="fas fa-cog"></i> Admin
+                    </a>
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <!-- Global JavaScript for common functionality -->
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+
+        // Helper function to format dates
+        window.formatDate = function (dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        };
+
+        // Helper function to play notification sound (optional)
+        window.playNotification = function (type) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.type = 'sine';
+                oscillator.frequency.value = type === 'success' ? 880 : 440;
+                gainNode.gain.value = 0.2;
+
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                // Audio not supported - silent fail
+                console.log('Audio notification not supported');
+            }
+        };
+
+        // Add fade-in animation to main content
+        document.addEventListener('DOMContentLoaded', function () {
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.opacity = '0';
+                container.style.transition = 'opacity 0.3s ease-in-out';
+                setTimeout(() => {
+                    container.style.opacity = '1';
+                }, 100);
+            }
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

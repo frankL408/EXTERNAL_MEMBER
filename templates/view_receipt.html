@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Receipt - {{ member.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-receipt"></i> Receipt Details</h4>
+        </div>
+        <div class="card-body">
+            <!-- Display flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>ZCAS UNIVERSITY</h5>
+                    <p class="text-muted">Library Management System</p>
+                    <p class="text-muted">External Member Receipt</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h5>Receipt: {{ payment.receipt_number }}</h5>
+                    <p class="text-muted">Date: {{ payment.payment_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6>Member Information:</h6>
+                    <p><strong>{{ member.full_name }}</strong></p>
+                    <p>Member ID: {{ member.member_id }}</p>
+                    <p>Email: {{ member.email }}</p>
+                    <p>Phone: {{ member.phone }}</p>
+                    <p>Address: {{ member.address }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Payment Details:</h6>
+                    <p><strong>Amount:</strong> K{{ "%.2f"|format(payment.amount) }}</p>
+                    <p><strong>Payment Method:</strong> {{ payment.payment_method }}</p>
+                    <p><strong>Received By:</strong> {{ payment.received_by }}</p>
+                    <p><strong>Membership Type:</strong>
+                        {% if member.membership_type == 'monthly' %}
+                        Monthly
+                        {% if fee_breakdown.duration_months and fee_breakdown.duration_months > 1 %}
+                        ({{ fee_breakdown.duration_months }} months)
+                        {% endif %}
+                        {% else %}
+                        Six Months Package
+                        {% endif %}
+                    </p>
+                    <p><strong>Status:</strong>
+                        <span class="badge bg-{{ 'success' if member.status == 'active' else 'danger' }}">
+                            {{ member.status|title }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Fee Breakdown -->
+            <div class="row">
+                <div class="col-12">
+                    <h6>Fee Breakdown:</h6>
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-end">Amount (K)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set fee_breakdown = payment.get_fee_breakdown() %}
+
+                            {% if fee_breakdown %}
+                            {% if fee_breakdown.id_card_fee and fee_breakdown.id_card_fee > 0 %}
+                            <tr>
+                                <td>ID Card Fee</td>
+                                <td class="text-end">{{ "%.2f"|format(fee_breakdown.id_card_fee) }}</td>
+                            </tr>
+                            {% endif %}
+
+                            {% if fee_breakdown.wifi_fee and fee_breakdown.wifi_fee > 0 %}
+                            <tr>
+                                <td>WiFi Access Fee</td>
+                                <td class="text-end">{{ "%.2f"|format(fee_breakdown.wifi_fee) }}</td>
+                            </tr>
+                            {% endif %}
+
+                            {% if fee_breakdown.membership_fee and fee_breakdown.membership_fee > 0 %}
+                            <tr>
+                                <td>
+                                    {% if fee_breakdown.is_renewal %}
+                                    Membership Renewal Fee
+                                    {% if member.membership_type == 'monthly' and fee_breakdown.duration_months and
+                                    fee_breakdown.duration_months > 1 %}
+                                    ({{ fee_breakdown.duration_months }} months)
+                                    {% endif %}
+                                    {% else %}
+                                    {% if member.membership_type == 'monthly' %}
+                                    Monthly Membership Fee
+                                    {% if fee_breakdown.duration_months and fee_breakdown.duration_months > 1 %}
+                                    ({{ fee_breakdown.duration_months }} months)
+                                    {% endif %}
+                                    {% else %}
+                                    Six Months Membership Fee
+                                    {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">{{ "%.2f"|format(fee_breakdown.membership_fee) }}</td>
+                            </tr>
+                            {% endif %}
+                            {% else %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">
+                                    No fee breakdown available
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <tr class="table-primary">
+                                <td><strong>Total Amount Paid</strong></td>
+                                <td class="text-end"><strong>K{{ "%.2f"|format(payment.amount) }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Membership Information -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-calendar-alt"></i> Membership Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Registration Date:</strong> {{
+                                        member.registration_date.strftime('%Y-%m-%d') }}</p>
+                                    <p><strong>Membership Type:</strong> {{ member.membership_type|title }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Expiry Date:</strong>
+                                        {% if member.expiry_date %}
+                                        {{ member.expiry_date.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                        Not set
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Status:</strong>
+                                        <span
+                                            class="badge bg-{{ 'success' if member.status == 'active' else 'danger' }}">
+                                            {{ member.status|title }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12 text-center">
+                    <p class="text-muted">Thank you for your payment!</p>
+                    <p class="text-muted"><strong>Aspire, Acquire, Prosper</strong></p>
+                    <p class="text-muted">ZCAS University Library</p>
+                    <p class="text-muted"><small>This is a computer-generated receipt</small></p>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12 text-center">
+                    <!-- Print PDF Receipt -->
+                    {% if payment %}
+                    <a href="{{ url_for('print_receipt', payment_id=payment.id) }}" class="btn btn-primary"
+                        target="_blank">
+                        <i class="fas fa-print"></i> Print PDF Receipt
+                    </a>
+                    {% endif %}
+
+                    <!-- Print ID Card -->
+                    <a href="{{ url_for('print_id', member_id=member.id) }}" class="btn btn-success" target="_blank">
+                        <i class="fas fa-id-card"></i> Print ID Card
+                    </a>
+
+                    <!-- Member Details -->
+                    <a href="{{ url_for('member_details', member_id=member.id) }}" class="btn btn-info">
+                        <i class="fas fa-user"></i> Member Details
+                    </a>
+
+                    <!-- Renew Membership -->
+                    <a href="{{ url_for('renew_member', member_id=member.id) }}" class="btn btn-warning">
+                        <i class="fas fa-sync-alt"></i> Renew Membership
+                    </a>
+
+                    <!-- Back to Members -->
+                    <a href="{{ url_for('view_members') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Members
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

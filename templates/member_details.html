@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Details - {{ member.full_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .member-photo {
+            width: 200px;
+            height: 250px;
+            object-fit: cover;
+            border: 3px solid #1E3A8A;
+            border-radius: 8px;
+        }
+
+        .info-card {
+            border-left: 4px solid #1E3A8A;
+        }
+
+        .payment-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .payment-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-active {
+            background-color: #d1edff;
+            border-left: 4px solid #28a745;
+        }
+
+        .status-expired {
+            background-color: #ffe6e6;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1E3A8A;">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <strong><i class="fas fa-book"></i> ZCAS UNIVERSITY LIBRARY</strong>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a class="nav-link" href="{{ url_for('view_members') }}">
+                    <i class="fas fa-users"></i> Members
+                </a>
+                <a class="nav-link" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Header Section -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-user"></i> Member Details
+            </h1>
+            <div class="btn-group">
+                <a href="{{ url_for('view_members') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Members
+                </a>
+                <a href="{{ url_for('edit_member', member_id=member.id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit Member
+                </a>
+                <a href="{{ url_for('print_id', member_id=member.id) }}" class="btn btn-primary" target="_blank">
+                    <i class="fas fa-id-card"></i> Print ID Card
+                </a>
+            </div>
+        </div>
+
+        <!-- Member Information Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Basic Information
+                    <span class="badge bg-light text-dark ms-2">External Member</span>
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Photo Column -->
+                    <div class="col-md-3 text-center">
+                        {% if member.photo_path %}
+                        <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
+                            alt="{{ member.full_name }}" class="member-photo mb-3">
+                        {% else %}
+                        <div class="member-photo bg-light d-flex align-items-center justify-content-center mb-3">
+                            <i class="fas fa-user fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <h5>{{ member.full_name }}</h5>
+                        <p class="text-muted">{{ member.member_id }}</p>
+                    </div>
+
+                    <!-- Details Column -->
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-card p-3 mb-3">
+                                    <h6><i class="fas fa-envelope"></i> Email</h6>
+                                    <p class="mb-0">{{ member.email }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-card p-3 mb-3">
+                                    <h6><i class="fas fa-phone"></i> Phone</h6>
+                                    <p class="mb-0">{{ member.phone }}</p>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="info-card p-3 mb-3">
+                                    <h6><i class="fas fa-map-marker-alt"></i> Address</h6>
+                                    <p class="mb-0">{{ member.address }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Membership Information -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card {{ 'status-active' if member.status == 'active' else 'status-expired' }}">
+                    <div class="card-body text-center">
+                        <h6><i class="fas fa-calendar-check"></i> Status</h6>
+                        <span class="badge bg-{{ 'success' if member.status == 'active' else 'danger' }} fs-6">
+                            {{ member.status|upper }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card info-card">
+                    <div class="card-body text-center">
+                        <h6><i class="fas fa-star"></i> Membership Type</h6>
+                        <p class="mb-0 fs-5">
+                            {% if member.membership_type == 'monthly' %}
+                            Monthly ({{ member.duration_months }} month{{ 's' if member.duration_months > 1 else '' }})
+                            {% else %}
+                            Six Months Package
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card info-card">
+                    <div class="card-body text-center">
+                        <h6><i class="fas fa-clock"></i> Registration Date</h6>
+                        <p class="mb-0 fs-5">{{ member.registration_date.strftime('%d-%b-%Y') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiry Information -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="fas fa-calendar-alt"></i> Expiry Information</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if member.expiry_date %}
+                        {% set expiry_date = member.expiry_date.date() if member.expiry_date.__class__.__name__ ==
+                        'datetime' else member.expiry_date %}
+                        {% set today = now.date() %}
+                        {% set days_left = (expiry_date - today).days %}
+
+                        <p><strong>Expiry Date:</strong> {{ member.expiry_date.strftime('%d-%b-%Y') }}</p>
+                        <p>
+                            <strong>Days Remaining:</strong>
+                            {% if days_left > 0 %}
+                            <span class="badge bg-success">{{ days_left }} days</span>
+                            {% elif days_left == 0 %}
+                            <span class="badge bg-warning">Expires today</span>
+                            {% else %}
+                            <span class="badge bg-danger">Expired {{ -days_left }} days ago</span>
+                            {% endif %}
+                        </p>
+                        {% else %}
+                        <p class="text-muted">No expiry date set</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-money-bill-wave"></i> Payment Summary</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total Payments:</strong> {{ payments|length }}</p>
+                        <p><strong>Total Amount Paid:</strong> K{{ "%.2f"|format(total_paid) }}</p>
+                        <p><strong>Last Payment:</strong>
+                            {% if payments %}
+                            {{ payments[0].payment_date.strftime('%d-%b-%Y') }}
+                            {% else %}
+                            No payments
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="fas fa-receipt"></i> Payment History</h4>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Receipt Number</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Payment Method</th>
+                                <th>Received By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.receipt_number }}</td>
+                                <td>{{ payment.payment_date.strftime('%d-%b-%Y %H:%M') }}</td>
+                                <td><strong>K{{ "%.2f"|format(payment.amount) }}</strong></td>
+                                <td>{{ payment.payment_method }}</td>
+                                <td>{{ payment.received_by }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('print_receipt', payment_id=payment.id) }}"
+                                            class="btn btn-outline-primary" target="_blank" title="Print Receipt">
+                                            <i class="fas fa-print"></i> PDF
+                                        </a>
+                                        <a href="{{ url_for('view_receipt', member_id=member.id) }}"
+                                            class="btn btn-outline-info" title="View Receipt Details">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No payment records found for this member.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <div class="btn-group" role="group">
+                    <!-- Renew Membership Form -->
+                    <form method="POST" action="{{ url_for('renew_member', member_id=member.id) }}" class="d-inline">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-sync-alt"></i> Renew Membership
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <h6 class="dropdown-header">Select Renewal Period</h6>
+                                </li>
+                                <li>
+                                    <button type="submit" name="renew_period" value="monthly" class="dropdown-item">
+                                        1 Month - K90
+                                    </button>
+                                </li>
+                                <li>
+                                    <button type="submit" name="renew_period" value="six_months" class="dropdown-item">
+                                        6 Months - K500
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+
+                    <!-- Delete Member Form -->
+                    <form method="POST" action="{{ url_for('delete_member', member_id=member.id) }}" class="d-inline"
+                        onsubmit="return confirm('Are you sure you want to delete {{ member.full_name }}? This action cannot be undone!')">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete Member
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function () {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function (alert) {
+                setTimeout(function () {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+
+</html>

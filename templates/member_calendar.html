@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Membership Calendar{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-calendar-alt"></i> Membership Expiry Calendar</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" id="searchMembers" class="form-control" placeholder="Search members...">
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary active" data-filter="all">All</button>
+                        <button class="btn btn-outline-warning" data-filter="expiring">Expiring Soon</button>
+                        <button class="btn btn-outline-danger" data-filter="expired">Expired</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped" id="calendarTable">
+                    <thead>
+                        <tr>
+                            <th>Member Name</th>
+                            <th>Student ID</th>
+                            <th>Membership Type</th>
+                            <th>Expiry Date</th>
+                            <th>Days Left</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in members %}
+                        <tr class="member-row" data-status="{{ member.status }}"
+                            data-days="{{ member.days_left if member.days_left is not none else -999 }}">
+                            <td>
+                                <strong>{{ member.full_name }}</strong>
+                                {% if member.photo_path %}
+                                <i class="fas fa-camera text-success ms-1" title="Photo Available"></i>
+                                {% endif %}
+                            </td>
+                            <td><code>{{ member.member_id }}</code></td>
+                            <td>
+                                <span
+                                    class="badge bg-{{ 'info' if member.membership_type == 'monthly' else 'success' }}">
+                                    {{ member.membership_type|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if member.expiry_date %}
+                                {{ member.expiry_date.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if member.expiry_date %}
+                                {% set today = now.date() %}
+                                {% set expiry_date = member.expiry_date.date() %}
+                                {% set days_left = (expiry_date - today).days %}
+
+                                {% if days_left < 0 %} <span class="text-danger">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Expired {{ -days_left }} days ago
+                                    </span>
+                                    {% elif days_left == 0 %}
+                                    <span class="text-warning">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        Expires today
+                                    </span>
+                                    {% elif days_left <= 7 %} <span class="text-warning">
+                                        <i class="fas fa-clock"></i>
+                                        {{ days_left }} days
+                                        </span>
+                                        {% else %}
+                                        <span class="text-success">
+                                            <i class="fas fa-check-circle"></i>
+                                            {{ days_left }} days
+                                        </span>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if member.status == 'active' else 'danger' }}">
+                                    {{ member.status|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('renew_member', member_id=member.id) }}" class="btn btn-success"
+                                        title="Renew Membership">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </a>
+                                    <a href="{{ url_for('print_id', member_id=member.id) }}" class="btn btn-info"
+                                        title="Print ID Card">
+                                        <i class="fas fa-id-card"></i>
+                                    </a>
+                                    <a href="{{ url_for('view_receipt', member_id=member.id) }}" class="btn btn-warning"
+                                        title="View Receipt">
+                                        <i class="fas fa-receipt"></i>
+                                    </a>
+                                    <!-- Delete Button -->
+                                    <form method="POST" action="{{ url_for('delete_member', member_id=member.id) }}"
+                                        style="display: inline;"
+                                        onsubmit="return confirm('Are you sure you want to delete {{ member.full_name }}? This action cannot be undone!')">
+                                        <button type="submit" class="btn btn-danger" title="Delete Member">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-2x mb-3"></i>
+                                <p>No members found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary Statistics -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body text-center">
+                            <h5>{{ members|selectattr('status', 'equalto', 'active')|list|length }}</h5>
+                            <p class="mb-0">Active Members</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body text-center">
+                            {% set expiring_count = [] %}
+                            {% for member in members %}
+                            {% if member.expiry_date %}
+                            {% set today = now.date() %}
+                            {% set expiry_date = member.expiry_date.date() %}
+                            {% set days_left = (expiry_date - today).days %}
+                            {% if days_left >= 0 and days_left <= 7 %} {% set _=expiring_count.append(1) %} {% endif %}
+                                {% endif %} {% endfor %} <h5>{{ expiring_count|length }}</h5>
+                                <p class="mb-0">Expiring Soon</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-danger">
+                        <div class="card-body text-center">
+                            <h5>{{ members|selectattr('status', 'equalto', 'expired')|list|length }}</h5>
+                            <p class="mb-0">Expired</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body text-center">
+                            <h5>{{ members|length }}</h5>
+                            <p class="mb-0">Total Members</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .member-row.expiring {
+        background-color: #fff3cd !important;
+    }
+
+    .member-row.expired {
+        background-color: #f8d7da !important;
+    }
+
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchMembers');
+        const filterButtons = document.querySelectorAll('[data-filter]');
+        const memberRows = document.querySelectorAll('.member-row');
+
+        // Search functionality
+        searchInput.addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            memberRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const name = row.cells[0].textContent.toLowerCase();
+                const studentId = row.cells[1].textContent.toLowerCase();
+
+                if (name.includes(searchTerm) || studentId.includes(searchTerm) || text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Filter functionality
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const filter = this.getAttribute('data-filter');
+
+                // Update active button
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                // Filter rows
+                memberRows.forEach(row => {
+                    const status = row.getAttribute('data-status');
+                    const days = parseInt(row.getAttribute('data-days'));
+
+                    let show = false;
+                    if (filter === 'all') {
+                        show = true;
+                    } else if (filter === 'expiring') {
+                        show = days >= 0 && days <= 7;
+                    } else if (filter === 'expired') {
+                        show = days < 0 || status === 'expired';
+                    }
+
+                    // Update row styling based on status
+                    row.classList.remove('expiring', 'expired');
+                    if (days >= 0 && days <= 7) {
+                        row.classList.add('expiring');
+                    } else if (days < 0 || status === 'expired') {
+                        row.classList.add('expired');
+                    }
+
+                    row.style.display = show ? '' : 'none';
+                });
+            });
+        });
+
+        // Initialize row styling
+        memberRows.forEach(row => {
+            const days = parseInt(row.getAttribute('data-days'));
+            const status = row.getAttribute('data-status');
+
+            if (days >= 0 && days <= 7) {
+                row.classList.add('expiring');
+            } else if (days < 0 || status === 'expired') {
+                row.classList.add('expired');
+            }
+        });
+    });
+</script>
+{% endblock %}

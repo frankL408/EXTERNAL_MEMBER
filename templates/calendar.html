@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar View{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-calendar-alt fa-2x me-3 text-primary"></i>
+        <h1 class="h2 mb-0">Library Calendar</h1>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button id="todayBtn" class="btn btn-sm btn-outline-primary">Today</button>
+            <button id="prevBtn" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
+            <button id="nextBtn" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="btn-group">
+            <button id="monthView" class="btn btn-sm btn-outline-primary active">Month</button>
+            <button id="weekView" class="btn btn-sm btn-outline-primary">Week</button>
+            <button id="dayView" class="btn btn-sm btn-outline-primary">Day</button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="calendar-container">
+            <div id="calendar"></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Calendar Legend</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <span class="badge bg-primary me-2" style="padding: 5px 10px;">&nbsp;</span>
+                    <span>New Registrations</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-success me-2" style="padding: 5px 10px;">&nbsp;</span>
+                    <span>Renewals</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-warning me-2" style="padding: 5px 10px;">&nbsp;</span>
+                    <span>Expiry Dates</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-danger me-2" style="padding: 5px 10px;">&nbsp;</span>
+                    <span>Expired Memberships</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Upcoming Events</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% if upcoming_events %}
+                    {% for event in upcoming_events %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <span
+                                    class="badge {% if event.type == 'registration' %}bg-primary{% elif event.type == 'renewal' %}bg-success{% else %}bg-warning{% endif %} me-2">
+                                    {{ event.type|title if event.type else 'Event' }}
+                                </span>
+                                {{ event.title if event.title else 'Untitled Event' }}
+                            </h6>
+                            <small>{{ event.date.strftime('%b %d') if event.date else 'No date' }}</small>
+                        </div>
+                        <small class="text-muted">Member ID: {{ event.member_id if event.member_id else 'N/A' }}</small>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        No upcoming events
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Calendar Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('register_member') }}" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Register New Member
+                            </a>
+                            <button id="viewTodayRegistrations" class="btn btn-outline-info">
+                                <i class="fas fa-calendar-day"></i> View Today's Registrations
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('view_members') }}?filter=expiring" class="btn btn-warning">
+                                <i class="fas fa-exclamation-triangle"></i> View Expiring Memberships
+                            </a>
+                            <button id="viewThisMonth" class="btn btn-outline-secondary">
+                                <i class="fas fa-calendar"></i> View This Month's Summary
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="modalActionBtn" href="#" class="btn btn-primary">View Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden div to store calendar events as JSON -->
+<div id="calendarData" data-events="{{ calendar_events|tojson|safe if calendar_events else '[]' }}"
+    style="display: none;"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+
+        // Get calendar events from hidden div
+        var calendarDataEl = document.getElementById('calendarData');
+        var calendarEvents = [];
+
+        try {
+            var eventsJson = calendarDataEl.getAttribute('data-events');
+            if (eventsJson) {
+                calendarEvents = JSON.parse(eventsJson);
+            }
+        } catch (e) {
+            console.error('Error parsing calendar events:', e);
+            calendarEvents = [];
+        }
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: calendarEvents,
+            eventClick: function (info) {
+                var event = info.event;
+                var modal = new bootstrap.Modal(document.getElementById('eventModal'));
+
+                document.getElementById('modalTitle').textContent = event.title;
+
+                // Safely access extendedProps
+                var extendedProps = event.extendedProps || {};
+                var type = extendedProps.type || 'event';
+                var memberId = extendedProps.member_id || 'N/A';
+                var description = extendedProps.description || 'No description available';
+                var actionUrl = extendedProps.action_url || '#';
+
+                var content = `
+                <div class="mb-3">
+                    <strong>Type:</strong> 
+                    <span class="badge ${type === 'registration' ? 'bg-primary' :
+                        type === 'renewal' ? 'bg-success' :
+                            type === 'expiry' ? 'bg-warning' : 'bg-secondary'}">
+                        ${type.toUpperCase()}
+                    </span>
+                </div>
+                <div class="mb-3">
+                    <strong>Member ID:</strong> ${memberId}
+                </div>
+                <div class="mb-3">
+                    <strong>Description:</strong> ${description}
+                </div>
+                <div class="mb-3">
+                    <strong>Date:</strong> ${event.start ? event.start.toLocaleDateString() : 'No date'}
+                </div>
+            `;
+
+                document.getElementById('modalContent').innerHTML = content;
+
+                if (actionUrl && actionUrl !== '#') {
+                    document.getElementById('modalActionBtn').href = actionUrl;
+                    document.getElementById('modalActionBtn').style.display = 'inline-block';
+                    document.getElementById('modalActionBtn').textContent = 'View Details';
+                } else {
+                    document.getElementById('modalActionBtn').style.display = 'none';
+                }
+
+                modal.show();
+            },
+            dateClick: function (info) {
+                // Redirect to registration page with pre-filled date
+                window.location.href = "{{ url_for('register_member') }}?date=" + info.dateStr;
+            },
+            eventDidMount: function (info) {
+                // Add tooltip to events
+                if (info.event.extendedProps && info.event.extendedProps.description) {
+                    info.el.setAttribute('title', info.event.extendedProps.description);
+                    info.el.setAttribute('data-bs-toggle', 'tooltip');
+
+                    // Initialize tooltip for this element
+                    new bootstrap.Tooltip(info.el);
+                }
+            }
+        });
+
+        calendar.render();
+
+        // Custom button controls
+        document.getElementById('todayBtn').addEventListener('click', function () {
+            calendar.today();
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', function () {
+            calendar.prev();
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', function () {
+            calendar.next();
+        });
+
+        document.getElementById('monthView').addEventListener('click', function () {
+            calendar.changeView('dayGridMonth');
+            updateActiveView('month');
+        });
+
+        document.getElementById('weekView').addEventListener('click', function () {
+            calendar.changeView('timeGridWeek');
+            updateActiveView('week');
+        });
+
+        document.getElementById('dayView').addEventListener('click', function () {
+            calendar.changeView('timeGridDay');
+            updateActiveView('day');
+        });
+
+        document.getElementById('viewTodayRegistrations').addEventListener('click', function () {
+            var today = new Date();
+            calendar.gotoDate(today);
+            calendar.changeView('timeGridDay');
+            updateActiveView('day');
+        });
+
+        document.getElementById('viewThisMonth').addEventListener('click', function () {
+            var today = new Date();
+            calendar.gotoDate(today);
+            calendar.changeView('dayGridMonth');
+            updateActiveView('month');
+        });
+
+        function updateActiveView(view) {
+            document.getElementById('monthView').classList.remove('active');
+            document.getElementById('weekView').classList.remove('active');
+            document.getElementById('dayView').classList.remove('active');
+            document.getElementById(view + 'View').classList.add('active');
+        }
+
+        // Set initial active view
+        updateActiveView('month');
+    });
+</script>
+{% endblock %}

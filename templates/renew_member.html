@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Renew Membership - {{ member.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-calendar-plus"></i> Renew Membership</h4>
+                </div>
+                <div class="card-body">
+                    <div class="member-info mb-4 p-3 bg-light rounded">
+                        <h5>Member Information</h5>
+                        <p><strong>Name:</strong> {{ member.full_name }}</p>
+                        <p><strong>Member ID:</strong> {{ member.member_id }}</p>
+                        <p><strong>Current Status:</strong>
+                            <span class="badge bg-{{ 'success' if member.status == 'active' else 'danger' }}">
+                                {{ member.status|title }}
+                            </span>
+                        </p>
+                        {% if member.expiry_date %}
+                        <p><strong>Current Expiry:</strong> {{ member.expiry_date.strftime('%Y-%m-%d') }}</p>
+                        {% endif %}
+                    </div>
+
+                    <form method="POST" action="{{ url_for('renew_member', member_id=member.id) }}">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="membership_type" class="form-label">Membership Type</label>
+                                <select class="form-select" id="membership_type" name="membership_type" required>
+                                    <option value="monthly" {% if member.membership_type=='monthly' %}selected{% endif
+                                        %}>Monthly</option>
+                                    <option value="six_months" {% if member.membership_type=='six_months' %}selected{%
+                                        endif %}>Six Months (Better Value)</option>
+                                </select>
+                                <div class="form-text">
+                                    <small>
+                                        <strong>Six Months:</strong> K500 (Save K40 vs monthly)
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="duration_months" class="form-label">Duration (For Monthly Only)</label>
+                                <select class="form-select" id="duration_months" name="duration_months" required>
+                                    <option value="1">1 Month</option>
+                                    <option value="2">2 Months</option>
+                                    <option value="3">3 Months</option>
+                                    <option value="4">4 Months</option>
+                                    <option value="5">5 Months</option>
+                                    <option value="6">6 Months</option>
+                                    <option value="7">7 Months</option>
+                                    <option value="8">8 Months</option>
+                                    <option value="9">9 Months</option>
+                                    <option value="10">10 Months</option>
+                                    <option value="11">11 Months</option>
+                                    <option value="12">12 Months</option>
+                                </select>
+                                <small class="text-muted">Duration is fixed at 6 months for Six Months package</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Payment Method</label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="Cash" selected>Cash</option>
+                                <option value="Card">Card</option>
+                                <option value="Mobile Money">Mobile Money</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+
+                        <!-- Fee Calculation Preview -->
+                        <div class="fee-preview mb-4 p-3 border rounded bg-warning bg-opacity-10">
+                            <h6><i class="fas fa-calculator"></i> Renewal Fee Breakdown</h6>
+                            <div class="alert alert-info mb-2">
+                                <small><i class="fas fa-info-circle"></i> <strong>Renewal Note:</strong> Only membership
+                                    fee is charged for renewals. ID Card and WiFi are one-time fees during
+                                    registration.</small>
+                            </div>
+                            <div id="feeCalculation">
+                                <p class="text-muted">Select membership type and duration to see renewal fees</p>
+                            </div>
+                        </div>
+
+                        <!-- New Expiry Date Preview -->
+                        <div class="expiry-preview mb-4 p-3 border rounded bg-light">
+                            <h6><i class="fas fa-calendar-check"></i> New Expiry Date</h6>
+                            <div id="expiryCalculation">
+                                <p class="text-muted">New expiry date will be calculated after renewal</p>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check-circle"></i> Confirm Renewal
+                            </button>
+                            <a href="{{ url_for('view_members') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Members
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const membershipTypeSelect = document.getElementById('membership_type');
+        const durationSelect = document.getElementById('duration_months');
+        const feeCalculationDiv = document.getElementById('feeCalculation');
+        const expiryCalculationDiv = document.getElementById('expiryCalculation');
+
+        function updateDurationField() {
+            const membershipType = membershipTypeSelect.value;
+
+            if (membershipType === 'six_months') {
+                durationSelect.disabled = true;
+                durationSelect.value = '6';
+            } else {
+                durationSelect.disabled = false;
+            }
+            calculateFees();
+        }
+
+        function calculateFees() {
+            const membershipType = membershipTypeSelect.value;
+            const duration = parseInt(durationSelect.value);
+
+            // RENEWAL FEES ONLY - No ID card or WiFi fees for renewals
+            let membershipFee = 0;
+            let membershipDescription = '';
+            let actualDuration = duration;
+
+            if (membershipType === 'monthly') {
+                membershipFee = 90 * duration;
+                membershipDescription = `Monthly Membership (${duration} month${duration > 1 ? 's' : ''})`;
+                actualDuration = duration;
+            } else if (membershipType === 'six_months') {
+                membershipFee = 500; // Fixed six months fee
+                membershipDescription = 'Six Months Package';
+                actualDuration = 6;
+            }
+
+            const total = membershipFee;
+
+            // Calculate new expiry date
+            const today = new Date();
+            let newExpiry = new Date();
+
+            if (membershipType === 'monthly') {
+                newExpiry.setMonth(today.getMonth() + duration);
+            } else {
+                newExpiry.setMonth(today.getMonth() + 6); // Six months
+            }
+
+            const expiryText = newExpiry.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Calculate days from today
+            const daysFromNow = Math.ceil((newExpiry - today) / (1000 * 60 * 60 * 24));
+
+            // Display fee breakdown - RENEWAL ONLY (no ID card or WiFi)
+            let feeHtml = `
+                <div class="fee-item">
+                    <span>${membershipDescription}:</span>
+                    <span class="float-end">K${membershipFee.toFixed(2)}</span>
+                </div>
+                <div class="fee-item" style="border-top: 2px solid #1E3A8A; padding-top: 10px; margin-top: 10px;">
+                    <strong>Total Renewal Fee:</strong>
+                    <strong class="float-end text-success">K${total.toFixed(2)}</strong>
+                </div>
+            `;
+
+            // Display expiry calculation
+            let expiryHtml = `
+                <div class="expiry-item">
+                    <p><strong>New Expiry Date:</strong> ${expiryText}</p>
+                    <p><strong>Duration:</strong> ${actualDuration} month${actualDuration > 1 ? 's' : ''}</p>
+                    <p class="text-muted small">${daysFromNow} days from today</p>
+                </div>
+            `;
+
+            feeCalculationDiv.innerHTML = feeHtml;
+            expiryCalculationDiv.innerHTML = expiryHtml;
+        }
+
+        // Event listeners
+        membershipTypeSelect.addEventListener('change', updateDurationField);
+        durationSelect.addEventListener('change', calculateFees);
+
+        // Initial calculations
+        updateDurationField();
+    });
+</script>
+
+<style>
+    .fee-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .fee-item:last-child {
+        border-bottom: none;
+    }
+
+    .expiry-item {
+        padding: 10px 0;
+    }
+
+    .membership-option {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .membership-option:hover {
+        border-color: #1E3A8A;
+        background-color: #f8f9ff;
+    }
+
+    .membership-option.selected {
+        border-color: #1E3A8A;
+        background-color: #e6f0ff;
+    }
+
+    .discount-badge {
+        background: #28a745;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        margin-left: 5px;
+    }
+
+    /* Style for disabled select */
+    select:disabled {
+        background-color: #e9ecef;
+        opacity: 0.7;
+    }
+</style>
+{% endblock %}

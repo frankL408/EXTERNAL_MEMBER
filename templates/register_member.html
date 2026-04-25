@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}Register Member{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-user-plus fa-2x me-3 text-primary"></i>
+        <h1 class="h2 mb-0">Register New External Member</h1>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('view_members') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Members
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Member Registration Form</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('register_member') }}" enctype="multipart/form-data">
+                    <!-- Personal Information -->
+                    <h6 class="mb-3 text-primary"><i class="fas fa-user-circle me-2"></i>Personal Information</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="full_name" class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" id="full_name" name="full_name"
+                                value="{{ request.form.full_name if request.form.full_name else '' }}" required>
+                            <div class="form-text">Enter member's full name (as per ID)</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email Address *</label>
+                            <input type="email" class="form-control" id="email" name="email"
+                                value="{{ request.form.email if request.form.email else '' }}" required>
+                            <div class="form-text">Enter valid email address</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nrc_number" class="form-label">National Registration Number (NRC) or Passport
+                                Number *</label>
+                            <input type="text" class="form-control" id="nrc_number" name="nrc_number"
+                                value="{{ request.form.nrc_number if request.form.nrc_number else '' }}" required>
+                            <div class="form-text">Enter NRC (e.g., 123456/78/1) or Passport Number</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone Number *</label>
+                            <input type="tel" class="form-control" id="phone" name="phone"
+                                value="{{ request.form.phone if request.form.phone else '' }}" required>
+                            <div class="form-text">Enter contact phone number</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="registration_date" class="form-label">Registration Date *</label>
+                            <input type="date" class="form-control" id="registration_date" name="registration_date"
+                                value="{{ registration_date if registration_date else '' }}" required>
+                            <div class="form-text">Select registration date</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nationality" class="form-label">Nationality *</label>
+                            <select class="form-select" id="nationality" name="nationality" required>
+                                <option value="" selected disabled>Select nationality</option>
+                                <option value="Zambian" {% if request.form.nationality=='Zambian' %}selected{% endif %}>
+                                    Zambian</option>
+                                <option value="Other" {% if request.form.nationality=='Other' %}selected{% endif %}>
+                                    Other</option>
+                            </select>
+                            <div class="form-text">Select your nationality</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address *</label>
+                        <textarea class="form-control" id="address" name="address" rows="3"
+                            required>{{ request.form.address if request.form.address else '' }}</textarea>
+                        <div class="form-text">Enter complete residential address</div>
+                    </div>
+
+                    <!-- Membership Information -->
+                    <h6 class="mb-3 text-primary mt-4"><i class="fas fa-id-card me-2"></i>Membership Information</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="membership_type" class="form-label">Membership Type *</label>
+                            <select class="form-select" id="membership_type" name="membership_type" required>
+                                <option value="" selected disabled>Select membership type</option>
+                                <option value="monthly" {% if request.form.membership_type=='monthly' %}selected{% endif
+                                    %}>
+                                    Monthly (K90/month + ID Card: K100 + WiFi: K120)
+                                </option>
+                                <option value="six_months" {% if request.form.membership_type=='six_months' %}selected{%
+                                    endif %}>
+                                    6-Months (K500 + ID Card: K100 + WiFi: K120)
+                                </option>
+                            </select>
+                            <div class="form-text">Choose membership duration</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="duration_months" class="form-label">Duration (Months) *</label>
+                            <select class="form-select" id="duration_months" name="duration_months">
+                                <option value="1" {% if request.form.duration_months=='1' %}selected{% endif %}>1 Month
+                                </option>
+                                <option value="2" {% if request.form.duration_months=='2' %}selected{% endif %}>2 Months
+                                </option>
+                                <option value="3" {% if request.form.duration_months=='3' %}selected{% endif %}>3 Months
+                                </option>
+                                <option value="4" {% if request.form.duration_months=='4' %}selected{% endif %}>4 Months
+                                </option>
+                                <option value="5" {% if request.form.duration_months=='5' %}selected{% endif %}>5 Months
+                                </option>
+                                <option value="6" {% if request.form.duration_months=='6' %}selected{% endif %}>6 Months
+                                </option>
+                                <option value="7" {% if request.form.duration_months=='7' %}selected{% endif %}>7 Months
+                                </option>
+                                <option value="8" {% if request.form.duration_months=='8' %}selected{% endif %}>8 Months
+                                </option>
+                                <option value="9" {% if request.form.duration_months=='9' %}selected{% endif %}>9 Months
+                                </option>
+                                <option value="10" {% if request.form.duration_months=='10' %}selected{% endif %}>10
+                                    Months</option>
+                                <option value="11" {% if request.form.duration_months=='11' %}selected{% endif %}>11
+                                    Months</option>
+                                <option value="12" {% if request.form.duration_months=='12' %}selected{% endif %}>12
+                                    Months</option>
+                            </select>
+                            <div class="form-text">Select duration (for monthly membership only)</div>
+                        </div>
+                    </div>
+
+                    <!-- Photo Upload -->
+                    <h6 class="mb-3 text-primary mt-4"><i class="fas fa-camera me-2"></i>Profile Photo</h6>
+
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">Upload Passport Photo *</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept=".jpg,.jpeg,.png"
+                            required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> Maximum size: 2MB | Formats: JPG, JPEG, PNG
+                        </div>
+                        <div class="mt-2">
+                            <img id="photoPreview" src="#" alt="Photo Preview" class="img-thumbnail d-none"
+                                style="max-width: 150px; max-height: 150px;">
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <h6 class="mb-3 text-primary mt-4"><i class="fas fa-money-bill-wave me-2"></i>Payment Information
+                    </h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="payment_method" class="form-label">Payment Method *</label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="Cash" {% if request.form.payment_method=='Cash' %}selected{% endif %}>
+                                    Cash</option>
+                                <option value="Bank Transfer" {% if request.form.payment_method=='Bank Transfer'
+                                    %}selected{% endif %}>Bank Transfer</option>
+                                <option value="Mobile Money" {% if request.form.payment_method=='Mobile Money'
+                                    %}selected{% endif %}>Mobile Money</option>
+                                <option value="Card" {% if request.form.payment_method=='Card' %}selected{% endif %}>
+                                    Card</option>
+                                <option value="Other" {% if request.form.payment_method=='Other' %}selected{% endif %}>
+                                    Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Fee Summary</label>
+                            <div class="border rounded p-2 bg-light">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Membership Fee:</span>
+                                    <span id="membershipFee">K0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>ID Card Fee:</span>
+                                    <span id="idCardFee">K100.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>WiFi Fee:</span>
+                                    <span id="wifiFee">K120.00</span>
+                                </div>
+                                <hr class="my-1">
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Total:</span>
+                                    <span id="totalFee">K220.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                        <label class="form-check-label" for="terms">
+                            I confirm that all information provided is accurate and complete
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="reset" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-redo"></i> Reset Form
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Register Member
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Fee Information Card -->
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Fee Structure Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Monthly Membership</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>K90 per month</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Flexible duration</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Renewable monthly</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>6-Month Membership</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>K500 for 6 months</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Save K40</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Best value option</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Additional Fees</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-id-card text-primary me-2"></i>ID Card: K100 (one-time)</li>
+                            <li><i class="fas fa-wifi text-primary me-2"></i>WiFi Access: K120 (one-time)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Required Documents Information -->
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0"><i class="fas fa-file-alt me-2"></i>Required Documents</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-id-card text-primary me-2"></i>Identification</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check-circle text-success me-2"></i>National Registration Card (NRC)
+                            </li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Valid Passport (for non-Zambians)
+                            </li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Driver's License (optional)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-camera me-2 text-primary"></i>Photo Requirements</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Recent passport-size photo</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>White or light background</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Clear face visibility</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Calculate and display fees
+        function calculateFees() {
+            var membershipType = document.getElementById('membership_type').value;
+            var durationMonths = parseInt(document.getElementById('duration_months').value) || 1;
+
+            var membershipFee = 0;
+            var idCardFee = 100;
+            var wifiFee = 120;
+
+            if (membershipType === 'monthly') {
+                membershipFee = 90 * durationMonths;
+            } else if (membershipType === 'six_months') {
+                membershipFee = 500;
+            }
+
+            var totalFee = membershipFee + idCardFee + wifiFee;
+
+            // Update display
+            document.getElementById('membershipFee').textContent = 'K' + membershipFee.toFixed(2);
+            document.getElementById('idCardFee').textContent = 'K' + idCardFee.toFixed(2);
+            document.getElementById('wifiFee').textContent = 'K' + wifiFee.toFixed(2);
+            document.getElementById('totalFee').textContent = 'K' + totalFee.toFixed(2);
+        }
+
+        // Show/hide duration field based on membership type
+        function toggleDurationField() {
+            var membershipType = document.getElementById('membership_type').value;
+            var durationField = document.getElementById('duration_months');
+
+            if (membershipType === 'six_months') {
+                durationField.disabled = true;
+                durationField.value = '6';
+            } else {
+                durationField.disabled = false;
+            }
+            calculateFees();
+        }
+
+        // Validate NRC number format
+        function validateNRC() {
+            var nrcInput = document.getElementById('nrc_number');
+            var nrcValue = nrcInput.value.trim();
+            var nationality = document.getElementById('nationality').value;
+
+            // Basic validation - NRC format for Zambians
+            if (nationality === 'Zambian') {
+                var nrcPattern = /^\d{6,8}\/\d{1,2}\/\d{1}$/;
+                if (nrcValue && !nrcPattern.test(nrcValue)) {
+                    nrcInput.classList.add('is-invalid');
+                    return false;
+                } else {
+                    nrcInput.classList.remove('is-invalid');
+                    nrcInput.classList.add('is-valid');
+                    return true;
+                }
+            } else {
+                // For non-Zambians, passport number validation
+                if (nrcValue && nrcValue.length < 5) {
+                    nrcInput.classList.add('is-invalid');
+                    return false;
+                } else {
+                    nrcInput.classList.remove('is-invalid');
+                    nrcInput.classList.add('is-valid');
+                    return true;
+                }
+            }
+        }
+
+        // Add validation hint on NRC field
+        function updateNRCPlaceholder() {
+            var nationality = document.getElementById('nationality').value;
+            var nrcInput = document.getElementById('nrc_number');
+            var helpText = nrcInput.nextElementSibling;
+
+            if (nationality === 'Zambian') {
+                nrcInput.placeholder = 'e.g., 123456/78/1';
+                if (helpText && helpText.classList.contains('form-text')) {
+                    helpText.innerHTML = 'Enter NRC number in format: XXXXXX/XX/X (e.g., 123456/78/1)';
+                }
+            } else {
+                nrcInput.placeholder = 'e.g., AB1234567';
+                if (helpText && helpText.classList.contains('form-text')) {
+                    helpText.innerHTML = 'Enter Passport number (minimum 5 characters)';
+                }
+            }
+        }
+
+        // Photo preview
+        document.getElementById('photo').addEventListener('change', function (e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var preview = document.getElementById('photoPreview');
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // NRC validation on input
+        document.getElementById('nrc_number').addEventListener('input', validateNRC);
+        document.getElementById('nationality').addEventListener('change', function () {
+            updateNRCPlaceholder();
+            validateNRC();
+        });
+
+        // Initialize event listeners
+        document.getElementById('membership_type').addEventListener('change', toggleDurationField);
+        document.getElementById('duration_months').addEventListener('change', calculateFees);
+
+        // Initialize calculations
+        toggleDurationField();
+        updateNRCPlaceholder();
+
+        // Set minimum date to today for registration date
+        var today = new Date().toISOString().split('T')[0];
+        var dateInput = document.getElementById('registration_date');
+        if (!dateInput.value) {
+            dateInput.value = today;
+        }
+        dateInput.min = today;
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function (e) {
+            var photoInput = document.getElementById('photo');
+            if (photoInput.files.length === 0) {
+                e.preventDefault();
+                alert('Please upload a profile photo');
+                return false;
+            }
+
+            var file = photoInput.files[0];
+            var maxSize = 2 * 1024 * 1024; // 2MB
+            if (file.size > maxSize) {
+                e.preventDefault();
+                alert('File size exceeds 2MB limit. Please choose a smaller file.');
+                return false;
+            }
+
+            var validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!validTypes.includes(file.type)) {
+                e.preventDefault();
+                alert('Please upload a valid image file (JPG, JPEG, or PNG)');
+                return false;
+            }
+
+            // Validate NRC field
+            var nrcValid = validateNRC();
+            if (!nrcValid) {
+                e.preventDefault();
+                alert('Please enter a valid NRC number (format: XXXXXX/XX/X) or valid Passport number');
+                return false;
+            }
+
+            // Validate nationality selection
+            var nationality = document.getElementById('nationality').value;
+            if (!nationality) {
+                e.preventDefault();
+                alert('Please select your nationality');
+                return false;
+            }
+
+            return true;
+        });
+    });
+</script>
+{% endblock %}
