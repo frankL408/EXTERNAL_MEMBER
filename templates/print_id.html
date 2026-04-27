@@ -3,56 +3,46 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Print ID Card - {{ member.full_name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Base styles */
+        /* ----- GLOBAL RESET & FORCE COLOR ACCURACY ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        body {
+            background: #f4f7fc;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        /* Base card styling (preview, etc) */
         .card {
             border: none;
-            border-radius: 10px;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
         }
 
-        .card-header {
-            border-radius: 10px 10px 0 0 !important;
-            border: none;
+        /* top bar tweaks */
+        .navbar {
+            background-color: #1E3A8A !important;
         }
 
-        .btn {
-            border-radius: 6px;
-            font-weight: 500;
-        }
-
-        .img-thumbnail {
-            border-radius: 8px;
-            border: 2px solid #dee2e6;
-        }
-
-        .badge {
-            font-size: 0.75em;
-        }
-
-        .table th {
-            border-top: none;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .alert {
-            border-radius: 8px;
-            border: none;
-        }
-
-        /* ID Card Styles - Both Front and Back for Printing */
+        /* ID CARD PRINT CONTAINER – hidden on screen, visible on print */
         .id-card-print-container {
             display: none;
         }
 
-        /* Print-specific styles - creates two separate pages for front/back */
+        /* ---- CORE PRINT STYLES : ENFORCE EXACT CUSTOM COLORS & DIMENSIONS ---- */
         @media print {
 
-            /* Hide all non-card elements when printing */
+            /* hide all on-screen UI */
             .navbar,
             .btn-toolbar,
             .btn,
@@ -63,16 +53,29 @@
             .mt-4,
             .mt-3,
             .id-card-preview-container,
-            .id-card-flip-card {
+            .id-card-flip-card,
+            .container-fluid>.row:first-of-type,
+            .border-bottom,
+            h1.h2 {
                 display: none !important;
             }
 
-            /* Show print container */
-            .id-card-print-container {
-                display: block !important;
+            /* remove page margins, force clean layout */
+            body {
+                margin: 0;
+                padding: 0;
+                background: white;
             }
 
-            /* Front page styles */
+            /* show print container as block */
+            .id-card-print-container {
+                display: block !important;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* each card side occupies its own page (break-after) */
             .print-front-page,
             .print-back-page {
                 page-break-after: always;
@@ -84,79 +87,237 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-            }
-
-            .print-id-card {
-                width: 3.375in;
-                height: 2.125in;
-                margin: 0 auto;
-                border: 2px solid #1E3A8A;
-                border-radius: 8px;
                 background: white;
-                position: relative;
-                box-shadow: none;
             }
 
-            /* Front card specific */
-            .print-id-card-front {
-                background: linear-gradient(135deg, #EFF6FF 0%, #ffffff 100%);
-            }
-
-            /* Back card specific - No logo, centered content */
-            .print-id-card-back {
-                background: linear-gradient(135deg, #FEF9E6 0%, #ffffff 100%);
-                page-break-before: avoid;
+            /* 
+                MAIN ID CARD WRAPPER – applies the requested spec:
+                body style: background-color #160a25
+                div style: padding: 15px, height: 250px, break-inside: avoid, width: 350pt
+                Additionally we set margin auto and text-align left (inherited)
+            */
+            .print-id-card {
+                background-color: #160a25 !important;
+                /* body style color */
+                padding: 15px !important;
+                /* explicit padding */
+                height: 250px !important;
+                /* strict height */
+                break-inside: avoid !important;
+                width: 350pt !important;
+                /* fixed width as requested */
+                margin: 0 auto;
                 display: flex;
                 flex-direction: column;
-                justify-content: center;
-                align-items: center;
+                color: #160a25;
+                /* base text color (overridden inside) */
+                text-align: left;
+                border-radius: 16px;
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+                border: none;
+                position: relative;
+            }
+
+            /* Front & Back inner cards (white background with subtle gradient) */
+            .print-id-card-front,
+            .print-id-card-back {
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(145deg, #fef9f0 0%, #ffffff 100%);
+                border-radius: 14px;
+                padding: 12px 14px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                position: relative;
+                overflow: hidden;
+            }
+
+            /* back side – centered elegant layout */
+            .print-id-card-back {
+                background: linear-gradient(135deg, #FFF6E8 0%, #ffffff 100%);
                 text-align: center;
+                align-items: center;
+                justify-content: center;
             }
 
-            /* Ensure images print properly */
-            img {
+            /* ---- HEADER STYLE: exactly as spec: font-size:19pt; font-weight:bold; color:#FFF; text-align:center; font-family:arial; background-color:#301934; padding:2pt ---- */
+            .custom-id-header {
+                font-size: 19pt !important;
+                font-weight: bold !important;
+                color: #FFF !important;
+                text-align: center !important;
+                font-family: arial, sans-serif !important;
+                background-color: #301934 !important;
+                padding: 2pt !important;
+                border-radius: 12px 12px 0 0;
+                margin: -4px -4px 12px -4px;
+                line-height: 1.2;
+            }
+
+            /* photo + info row */
+            .id-photo-area {
+                display: flex;
+                gap: 14px;
+                margin: 6px 6px 8px 6px;
+                align-items: center;
+            }
+
+            .photo-box {
+                width: 85px;
+                height: 85px;
+                background: #f2eef5;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid #e9d7f0;
+                overflow: hidden;
+            }
+
+            .photo-box img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .member-details {
+                flex: 1;
+            }
+
+            .member-name {
+                font-size: 13pt;
+                font-weight: 800;
+                font-family: 'Arial', sans-serif;
+                color: #160a25;
+                line-height: 1.2;
+                margin-bottom: 4px;
+            }
+
+            .member-id-text {
+                font-size: 9pt;
+                color: #4a3b5e;
+                font-weight: 500;
+            }
+
+            .nrc-chip {
+                background: #ede7f6;
+                display: inline-block;
+                padding: 3px 8px;
+                border-radius: 20px;
+                font-size: 8pt;
+                font-weight: 700;
+                font-family: monospace;
+                color: #301934;
+                margin-top: 6px;
+            }
+
+            .library-badge {
+                text-align: center;
+                margin-top: auto;
+                padding-top: 6px;
+            }
+
+            .library-badge span {
+                font-size: 7pt;
+                color: #5c4680;
+                background: #f4edfc;
+                padding: 3px 10px;
+                border-radius: 20px;
+            }
+
+            .footer-note {
+                text-align: center;
+                font-size: 6pt;
+                font-style: italic;
+                color: #6c5b7b;
+                border-top: 1px dashed #ddcee8;
+                padding-top: 6px;
+                margin-top: 5px;
+            }
+
+            /* BACK SIDE MODERN – property text, contact details, scan instruction */
+            .property-text {
+                background: #efdffb;
+                padding: 6px 14px;
+                border-radius: 30px;
+                font-weight: 800;
+                color: #301934;
+                font-size: 10pt;
+                letter-spacing: 0.5px;
+                display: inline-block;
+            }
+
+            .separator-line {
+                width: 65px;
+                height: 2px;
+                background: #B8860B;
+                margin: 10px auto;
+            }
+
+            .contact-details {
+                margin: 8px 0;
+            }
+
+            .contact-item {
+                margin-bottom: 8px;
+                font-size: 0.68rem;
+                line-height: 1.3;
+                color: #1f1a2e;
+            }
+
+            .contact-label {
+                font-weight: 800;
+                color: #301934;
+            }
+
+            .scan-instruction {
+                background: #30193418;
+                font-weight: bold;
+                border-radius: 50px;
+                padding: 5px 12px;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                font-size: 0.6rem;
+                color: #301934;
+            }
+
+            .important-note {
+                font-size: 7pt;
+                margin-top: 10px;
+                color: #5c4b6e;
+                border-top: 1px solid #decdf0;
+                padding-top: 8px;
+                width: 100%;
+            }
+
+            /* ensure all colors are exact */
+            .print-id-card-front,
+            .print-id-card-back {
                 print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-            }
-
-            /* Force background colors to print */
-            * {
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-            }
-
-            /* Hide any buttons or interactive elements */
-            .no-print {
-                display: none;
             }
         }
 
-        /* Screen preview styles for flip card */
+        /* screen preview (flip card preview) */
         .id-card-preview-container {
-            perspective: 1200px;
-            margin-bottom: 1rem;
+            perspective: 1400px;
+            margin-bottom: 1.5rem;
         }
 
         .id-card-flip-card {
-            background-color: transparent;
+            background: transparent;
             width: 100%;
-            max-width: 420px;
+            max-width: 380px;
             margin: 0 auto;
-            height: auto;
-            min-height: 240px;
-            border: none;
             cursor: pointer;
         }
 
         .id-card-flip-card-inner {
             position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.6s;
+            transition: transform 0.5s;
             transform-style: preserve-3d;
-            border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 18px;
         }
 
         .id-card-flip-card:hover .id-card-flip-card-inner {
@@ -165,17 +326,16 @@
 
         .id-card-front,
         .id-card-back {
-            position: relative;
-            width: 100%;
             backface-visibility: hidden;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #EFF6FF 0%, #ffffff 100%);
-            border: 2px solid #1E3A8A;
-            padding: 12px;
+            border-radius: 18px;
+            background: white;
+            border: 2px solid #301934;
+            padding: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
 
         .id-card-front {
-            z-index: 2;
+            background: linear-gradient(145deg, #fff8f0, #fff);
         }
 
         .id-card-back {
@@ -183,516 +343,309 @@
             top: 0;
             left: 0;
             transform: rotateY(180deg);
-            background: linear-gradient(135deg, #FEF9E6 0%, #ffffff 100%);
-            border-color: #2c3e66;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
+            background: #fffaf2;
             height: 100%;
-        }
-
-        .id-card-header {
-            background: #1E3A8A;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px 6px 0 0;
-            margin: -12px -12px 12px -12px;
-        }
-
-        .logo-placeholder {
-            width: 30px;
-            height: 30px;
-            background: white;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            font-weight: bold;
-            color: #1E3A8A;
-        }
-
-        /* Print ID Card specific styles */
-        .print-id-card {
             width: 100%;
-            max-width: 3.375in;
-            height: auto;
-            min-height: 2.125in;
-            padding: 12px;
-            margin: 0 auto;
-        }
-
-        .print-id-card-front,
-        .print-id-card-back {
-            width: 3.375in;
-            height: 2.125in;
-            padding: 12px;
-            position: relative;
-        }
-
-        /* Back side specific styles for print - Centered, no logo */
-        .print-id-card-back {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
         }
 
-        .print-id-card-back .property-text {
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: #1E3A8A;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            line-height: 1.3;
-            margin-bottom: 12px;
-            padding: 0 8px;
+        @media (max-width: 768px) {
+            .id-card-flip-card {
+                max-width: 320px;
+            }
         }
 
-        .print-id-card-back .separator-line {
-            height: 1px;
-            background: #B8860B;
-            margin: 8px auto 12px auto;
-            width: 70%;
-        }
-
-        .print-id-card-back .contact-details {
-            margin: 8px 0;
-        }
-
-        .print-id-card-back .contact-item {
-            font-size: 0.68rem;
-            margin-bottom: 6px;
-            line-height: 1.3;
-        }
-
-        .print-id-card-back .contact-label {
-            font-weight: bold;
-            color: #1E3A8A;
-        }
-
-        .print-id-card-back .contact-value {
-            color: #2c3e66;
-        }
-
-        .print-id-card-back .scan-instruction {
-            margin-top: 10px;
-            padding: 6px 8px;
-            background: #f0f0f0;
-            border-radius: 4px;
-            font-size: 0.55rem;
-            color: #1E3A8A;
-            font-weight: bold;
-        }
-
-        .print-id-card-back .important-note {
-            margin-top: 8px;
-            padding: 6px 8px;
-            border-top: 1px solid #B8860B;
-            font-size: 0.55rem;
-            color: #6c757d;
-        }
-
-        /* NRC field styling */
-        .nrc-number {
-            font-family: 'Courier New', monospace;
+        .nrc-number-preview {
+            background: #ede7f6;
+            border-radius: 18px;
+            padding: 2px 8px;
             font-size: 0.7rem;
             font-weight: 600;
-            color: #2c3e66;
-            background: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-            display: inline-block;
-            margin-top: 2px;
-        }
-
-        @media print {
-            body {
-                margin: 0;
-                padding: 0;
-            }
-
-            .print-front-page,
-            .print-back-page {
-                page-break-after: always;
-                page-break-inside: avoid;
-            }
-
-            .print-id-card-front,
-            .print-id-card-back {
-                box-shadow: none;
-                border: 2px solid #1E3A8A;
-            }
-
-            .nrc-number {
-                background: #f8f9fa;
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-            }
         }
     </style>
 </head>
 
-<body>
+<body style="background: #f4f2f9;">
     <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1E3A8A;">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('dashboard') }}">
                 <strong><i class="fas fa-book"></i> ZCAS UNIVERSITY LIBRARY</strong>
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ url_for('dashboard') }}">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-                <a class="nav-link" href="{{ url_for('view_members') }}">
-                    <i class="fas fa-users"></i> Members
-                </a>
-                <a class="nav-link" href="{{ url_for('scan_member') }}">
-                    <i class="fas fa-qrcode"></i> Scan Member
-                </a>
-                <a class="nav-link" href="{{ url_for('logout') }}">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+                <a class="nav-link" href="{{ url_for('dashboard') }}"><i class="fas fa-tachometer-alt"></i>
+                    Dashboard</a>
+                <a class="nav-link" href="{{ url_for('view_members') }}"><i class="fas fa-users"></i> Members</a>
+                <a class="nav-link" href="{{ url_for('scan_member') }}"><i class="fas fa-qrcode"></i> Scan Member</a>
+                <a class="nav-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div
-            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 class="h2">Print ID Card</h1>
-            <div class="btn-toolbar mb-2 mb-md-0">
-                <a href="{{ url_for('view_members') }}" class="btn btn-secondary me-2">
-                    <i class="fas fa-arrow-left"></i> Back to Members
-                </a>
-                <button onclick="window.print();" class="btn btn-primary">
-                    <i class="fas fa-print"></i> Print ID Card (Both Sides)
-                </button>
+    <div class="container-fluid py-3">
+        <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+            <h1 class="h2" style="color: #160a25;">Print ID Card</h1>
+            <div>
+                <a href="{{ url_for('view_members') }}" class="btn btn-secondary me-2"><i class="fas fa-arrow-left"></i>
+                    Back</a>
+                <button onclick="window.print();" class="btn btn-primary"
+                    style="background:#301934; border-color:#301934;"><i class="fas fa-print"></i> Print ID Card (Both
+                    Sides)</button>
             </div>
         </div>
 
-        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         {% for category, message in messages %}
         <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
             role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            {{ message }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
         {% endif %}
         {% endwith %}
 
-        <!-- Hidden Print Container - Will be visible only when printing -->
+        <!-- ========= HIDDEN PRINT CONTAINER – follows exact spec: body style background #160a25, div padding 15px height 250px width 350pt ========= -->
         <div class="id-card-print-container">
-            <!-- Front Side - With NRC/Passport Number Displayed, No Membership Type -->
+            <!-- FRONT SIDE: outer div with background-color #160a25, padding:15px, height:250px, width:350pt, break-inside:avoid -->
             <div class="print-front-page">
-                <div class="print-id-card print-id-card-front">
-                    <!-- Header with Logo -->
-                    <div class="d-flex align-items-center justify-content-between mb-2"
-                        style="background: #1E3A8A; color: white; padding: 8px; margin: -12px -12px 8px -12px; border-radius: 4px 4px 0 0;">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-white rounded d-flex align-items-center justify-content-center me-2"
-                                style="width: 32px; height: 32px; color: #1E3A8A;">
-                                <i class="fas fa-university fa-lg"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0" style="font-size: 0.85rem; font-weight: bold;">ZCAS UNIVERSITY</h6>
-                                <small style="font-size: 0.6rem;">LIBRARY MEMBER</small>
-                            </div>
+                <div class="print-id-card"
+                    style="background-color: #160a25; padding: 15px; height: 250px; break-inside: avoid; width: 350pt; margin: 0 auto; display: flex; flex-direction: column;">
+                    <div class="print-id-card-front"
+                        style="background: linear-gradient(115deg, #ffffff 0%, #fef7e8 100%); border-radius: 16px; height: 100%; display: flex; flex-direction: column;">
+                        <!-- Header: exactly matching new spec: font-size 19pt, bold, color #FFF, text-align center, font-family arial, background #301934, padding 2pt -->
+                        <div class="custom-id-header">
+                            ZCAS UNIVERSITY
                         </div>
-                        <div>
-                            <span class="badge bg-light text-dark" style="font-size: 0.6rem;">ID CARD</span>
-                        </div>
-                    </div>
-
-                    <div class="row align-items-center mt-2">
-                        <div class="col-4 text-center">
-                            {% if member.photo_path %}
-                            <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
-                                class="img-fluid rounded border"
-                                style="max-height: 85px; width: auto; object-fit: cover;">
-                            {% else %}
-                            <div class="bg-light border rounded d-flex align-items-center justify-content-center mx-auto"
-                                style="height: 85px; width: 70px;">
-                                <small class="text-muted">PHOTO</small>
+                        <!-- Photo + Member Info row -->
+                        <div class="id-photo-area">
+                            <div class="photo-box">
+                                {% if member.photo_path %}
+                                <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
+                                    alt="Member Photo">
+                                {% else %}
+                                <i class="fas fa-camera fa-2x" style="color:#b6a2d6;"></i>
+                                {% endif %}
                             </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-8">
-                            <div style="font-size: 0.8rem;">
-                                <div class="fw-bold" style="font-size: 0.85rem; line-height: 1.2;"
-                                    title="{{ member.full_name }}">
-                                    {{ member.full_name }}
+                            <div class="member-details">
+                                <div class="member-name">{{ member.full_name }}</div>
+                                <div class="member-id-text">ID: {{ member.member_id }}</div>
+                                <div class="nrc-chip">
+                                    📘 NRC: {{ member.nrc_number if member.nrc_number else 'Not provided' }}
                                 </div>
-                                <div class="text-muted small mt-1">Member ID: {{ member.member_id }}</div>
-                                <!-- NRC/PASSPORT NUMBER DISPLAYED HERE -->
-                                <div class="mt-1">
-                                    <span class="text-muted small" style="font-size: 0.65rem;">NRC/Passport:</span>
-                                    <div class="nrc-number" style="font-size: 0.7rem; font-weight: 600;">
-                                        {{ member.nrc_number if member.nrc_number else 'Not provided' }}
-                                    </div>
-                                </div>
-                                <!-- MEMBERSHIP TYPE REMOVED FROM HERE -->
-                                <!-- EXPIRY DATE NOT DISPLAYED ON CARD -->
                             </div>
                         </div>
-                    </div>
-                    <div class="text-center mt-2">
-                        <small class="text-muted" style="font-size: 0.6rem; font-style: italic;">Library Access Card -
-                            Present for Scanning</small>
+                        <!-- Library access hint -->
+                        <div class="library-badge">
+                            <span>🔖 LIBRARY ACCESS – SCAN AT GATE</span>
+                        </div>
+                        <div class="footer-note">
+                            Valid membership • electronic verification
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Back Side - NO LOGO, Centered Contact Details with Scanning Instructions -->
+            <!-- BACK SIDE – outer container uses the same wrapper styling: background #160a25, padding 15px, height 250px, width 350pt -->
             <div class="print-back-page">
-                <div class="print-id-card print-id-card-back">
-                    <!-- Property Notice -->
-                    <div class="property-text">
-                        THIS CARD REMAINS THE<br>PROPERTY OF ZCAS UNIVERSITY
-                    </div>
-
-                    <div class="separator-line"></div>
-
-                    <!-- Contact Details - Centered -->
-                    <div class="contact-details">
-                        <div class="contact-item">
-                            <span class="contact-label">IF FOUND CONTACT:</span><br>
-                            <span class="contact-value">+260211222508</span>
+                <div class="print-id-card"
+                    style="background-color: #160a25; padding: 15px; height: 250px; break-inside: avoid; width: 350pt; margin: 0 auto; display: flex;">
+                    <div class="print-id-card-back"
+                        style="background: #FFFCF5; border-radius: 16px; width: 100%; height:100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                        <div class="property-text">
+                            🏛️ PROPERTY OF ZCAS UNIVERSITY
                         </div>
-                        <div class="contact-item">
-                            <span class="contact-label">Email:</span><br>
-                            <span class="contact-value">library@zcasu.edu.zm</span>
+                        <div class="separator-line"></div>
+                        <div class="contact-details">
+                            <div class="contact-item"><span class="contact-label">📞 IF FOUND
+                                    CONTACT:</span><br>+260211222508</div>
+                            <div class="contact-item"><span class="contact-label">✉️
+                                    Email:</span><br>library@zcasu.edu.zm</div>
+                            <div class="contact-item"><span class="contact-label">📍 Address:</span><br>ZCAS University
+                                Library, Lusaka</div>
+                            <div class="contact-item"><span class="contact-label">🌐 Website:</span><br>www.zcasu.edu.zm
+                            </div>
                         </div>
-                        <div class="contact-item">
-                            <span class="contact-label">Address:</span><br>
-                            <span class="contact-value">ZCAS University Library, Lusaka</span>
+                        <div class="scan-instruction">
+                            <i class="fas fa-qrcode"></i> SCAN AT GATE FOR ACCESS
                         </div>
-                        <div class="contact-item">
-                            <span class="contact-label">Website:</span><br>
-                            <span class="contact-value">www.zcasu.edu.zm</span>
+                        <div class="important-note">
+                            <i class="fas fa-shield-alt"></i> Report lost card immediately | Membership verified
+                            electronically
                         </div>
-                    </div>
-
-                    <!-- Scanning Instruction - Added for USB Reader System -->
-                    <div class="scan-instruction">
-                        <i class="fas fa-qrcode"></i> SCAN AT GATE FOR ACCESS
-                    </div>
-
-                    <!-- Important Note -->
-                    <div class="important-note">
-                        <i class="fas fa-shield-alt"></i> Report lost card immediately | Membership verified
-                        electronically
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- SCREEN PREVIEW ROW (Member Info + Flip preview) -->
         <div class="row">
-            <!-- Member Information -->
+            <!-- Member details column -->
             <div class="col-md-6 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-user-circle me-2"></i>Member Information
-                        </h5>
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white" style="background:#301934 !important;">
+                        <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Member Information</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Member ID:</div>
-                            <div class="col-sm-8">{{ member.member_id }}</div>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Member ID:</div>
+                            <div class="col-8">{{ member.member_id }}</div>
                         </div>
                         <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Full Name:</div>
-                            <div class="col-sm-8">{{ member.full_name }}</div>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Full Name:</div>
+                            <div class="col-8">{{ member.full_name }}</div>
                         </div>
                         <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">NRC/Passport Number:</div>
-                            <div class="col-sm-8">
-                                <code>{{ member.nrc_number if member.nrc_number else 'Not provided' }}</code>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">NRC/Passport:</div>
+                            <div class="col-8">
+                                <code>{{ member.nrc_number if member.nrc_number else 'Not provided' }}</code></div>
+                        </div>
+                        <hr>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Nationality:</div>
+                            <div class="col-8">{{ member.nationality if member.nationality else 'Not specified' }}</div>
+                        </div>
+                        <hr>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Email:</div>
+                            <div class="col-8">{{ member.email }}</div>
+                        </div>
+                        <hr>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Phone:</div>
+                            <div class="col-8">{{ member.phone }}</div>
+                        </div>
+                        <hr>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Address:</div>
+                            <div class="col-8">{{ member.address }}</div>
+                        </div>
+                        <hr>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Membership Type:</div>
+                            <div class="col-8"><span class="badge bg-info">{{ member.membership_type|title }}</span>
                             </div>
                         </div>
                         <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Nationality:</div>
-                            <div class="col-sm-8">{{ member.nationality if member.nationality else 'Not specified' }}
-                            </div>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Status:</div>
+                            <div class="col-8"><span class="badge bg-success">{{ member.status|title }}</span></div>
                         </div>
                         <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Email:</div>
-                            <div class="col-sm-8">{{ member.email }}</div>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Reg Date:</div>
+                            <div class="col-8">{{ member.registration_date.strftime('%Y-%m-%d') }}</div>
                         </div>
                         <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Phone:</div>
-                            <div class="col-sm-8">{{ member.phone }}</div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Address:</div>
-                            <div class="col-sm-8">{{ member.address }}</div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Membership Type:</div>
-                            <div class="col-sm-8">
-                                <span
-                                    class="badge {% if member.membership_type == 'monthly' %}bg-primary{% else %}bg-success{% endif %}">
-                                    {{ member.membership_type|title }}
-                                </span>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Status:</div>
-                            <div class="col-sm-8">
-                                <span
-                                    class="badge {% if member.status == 'active' %}bg-success{% else %}bg-danger{% endif %}">
-                                    {{ member.status|title }}
-                                </span>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Registration Date:</div>
-                            <div class="col-sm-8">{{ member.registration_date.strftime('%Y-%m-%d') }}</div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-sm-4 fw-bold">Expiry Date:</div>
-                            <div class="col-sm-8">
-                                {% if member.expiry_date %}
-                                {{ member.expiry_date.strftime('%Y-%m-%d') }}
-                                {% if member.days_left is defined and member.days_left is not none %}
-                                <span
-                                    class="badge {% if member.days_left <= 7 %}bg-warning{% else %}bg-info{% endif %} ms-2">
-                                    {{ member.days_left }} days left
-                                </span>
-                                {% endif %}
-                                {% else %}
-                                <span class="text-muted">Not set</span>
-                                {% endif %}
-                                <small class="text-muted d-block mt-1">*Not shown on physical ID card - verified
-                                    electronically at gate</small>
-                            </div>
+                        <div class="row mb-2">
+                            <div class="col-4 fw-bold">Expiry Date:</div>
+                            <div class="col-8">{% if member.expiry_date %}{{ member.expiry_date.strftime('%Y-%m-%d') }}
+                                <span class="badge bg-warning">Electronic gate check</span>{% else %}Not set{% endif
+                                %}<br><small class="text-muted">*Not shown on ID card – scanned at entry</small></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Action Buttons -->
                 <div class="card mt-3 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-grid gap-2 d-md-flex">
-                            <button onclick="window.print();" class="btn btn-primary flex-fill">
-                                <i class="fas fa-id-card me-2"></i>Print ID Card (Both Sides)
-                            </button>
-                            <a href="{{ url_for('print_receipt', member_id=member.id) }}"
-                                class="btn btn-success flex-fill" target="_blank">
-                                <i class="fas fa-receipt me-2"></i>Print Receipt
-                            </a>
-                        </div>
-                        <div class="d-grid gap-2 d-md-flex mt-2">
-                            <a href="{{ url_for('renew_member', member_id=member.id) }}"
-                                class="btn btn-warning flex-fill">
-                                <i class="fas fa-sync-alt me-2"></i>Renew Membership
-                            </a>
-                            <a href="{{ url_for('view_receipt', member_id=member.id) }}" class="btn btn-info flex-fill">
-                                <i class="fas fa-file-invoice me-2"></i>View Receipt
-                            </a>
-                        </div>
+                    <div class="card-body d-flex gap-2 flex-wrap">
+                        <button onclick="window.print();" class="btn btn-primary flex-fill"
+                            style="background:#301934;"><i class="fas fa-id-card"></i> Print Both Sides</button>
+                        <a href="{{ url_for('print_receipt', member_id=member.id) }}" class="btn btn-success flex-fill"
+                            target="_blank"><i class="fas fa-receipt"></i> Receipt</a>
+                        <a href="{{ url_for('renew_member', member_id=member.id) }}"
+                            class="btn btn-warning flex-fill"><i class="fas fa-sync-alt"></i> Renew</a>
                     </div>
                 </div>
             </div>
 
-            <!-- ID Card Preview & Photo -->
+            <!-- Preview card (flip) and photo + instructions -->
             <div class="col-md-6 mb-4">
-                <!-- Photo Preview -->
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-camera me-2"></i>Profile Photo
-                        </h5>
-                    </div>
+                    <div class="card-header bg-dark text-white" style="background:#1e2a45;"><i
+                            class="fas fa-camera me-2"></i>Profile Photo</div>
                     <div class="card-body text-center">
                         {% if member.photo_path %}
-                        {% set photo_url = url_for('static', filename='uploads/' + member.photo_path) %}
-                        <img src="{{ photo_url }}" class="img-thumbnail rounded" alt="{{ member.full_name }}"
-                            style="max-width: 200px; max-height: 250px; object-fit: cover;">
-                        <div class="mt-2">
-                            <small class="text-muted">Photo uploaded successfully</small>
-                        </div>
+                        <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
+                            class="img-thumbnail rounded"
+                            style="max-width: 180px; max-height: 200px; object-fit: cover;">
                         {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No profile photo uploaded</p>
-                        </div>
+                        <i class="fas fa-user-slash fa-3x text-muted"></i>
+                        <p>No photo</p>
                         {% endif %}
                     </div>
                 </div>
-
-                <!-- Information about double-sided printing -->
                 <div class="card shadow-sm">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-print me-2"></i>Printing Instructions
-                        </h5>
-                    </div>
+                    <div class="card-header bg-success text-white"><i class="fas fa-print"></i> Printing instructions &
+                        card style</div>
                     <div class="card-body">
-                        <div class="alert alert-info">
-                            <h6><i class="fas fa-info-circle"></i> Double-Sided ID Card</h6>
-                            <p class="small mb-2">When printing:</p>
-                            <ol class="small">
-                                <li>Click the <strong>"Print ID Card (Both Sides)"</strong> button</li>
-                                <li>In the print dialog, select <strong>"Print on both sides"</strong> (Flip on short
-                                    edge)</li>
-                                <li>The front side will print first, then the back side with contact information</li>
-                                <li>Use card stock paper for best results</li>
-                            </ol>
-                        </div>
-
-                        <div class="alert alert-warning mb-0">
-                            <h6 class="mb-2"><i class="fas fa-sticky-note"></i> Card Features:</h6>
-                            <p class="mb-0 small">✓ <strong>Front Side:</strong> Member photo, name, Member ID, and
-                                <strong>NRC/Passport Number</strong><br>
-                                ✓ <strong>Back Side:</strong> Contact information and scanning instructions<br>
-                                ✓ <strong>Electronic Verification:</strong> Membership status checked via USB scanner at
-                                gate<br>
-                                ✓ <strong>No Expiry Date:</strong> Membership validity verified electronically<br>
-                                ✓ <strong>Membership Type Not Displayed:</strong> Only essential identification
-                                information<br>
-                                ✓ Phone: +260211222508<br>
-                                ✓ Email: library@zcasu.edu.zm</p>
+                        <div class="alert alert-info small">✨ <strong>New ID design:</strong> Outer background #160a25,
+                            exact width 350pt, height 250px, padding 15px, break-inside avoid. Header uses <strong>19pt
+                                Arial bold, #FFF on #301934</strong> with 2pt padding. Fully compliant with spec.</div>
+                        <div class="alert alert-warning small mb-0">
+                            ✅ Front: member photo, name, Member ID, NRC/Passport number visible.<br>
+                            ✅ Back: centered property notice, contact, scanning notice.<br>
+                            ✅ No expiry date printed – verified electronically.<br>
+                            ✅ Print with double-side option (short edge flip).<br>
+                            📞 Contact: +260211222508 | library@zcasu.edu.zm
                         </div>
                     </div>
+                </div>
+                <!-- interactive preview flip card (screen only) -->
+                <div class="id-card-preview-container mt-4">
+                    <div class="id-card-flip-card">
+                        <div class="id-card-flip-card-inner">
+                            <div class="id-card-front">
+                                <div
+                                    style="background:#301934; color:white; text-align:center; font-weight:bold; padding:4px; border-radius: 10px 10px 0 0; font-family:arial; font-size:16px;">
+                                    ZCAS UNIVERSITY</div>
+                                <div class="d-flex mt-2 gap-2">
+                                    <div
+                                        style="width:70px; height:70px; background:#e9daf5; border-radius:12px; display: flex; align-items:center; justify-content:center;">
+                                        {% if member.photo_path %}
+                                        <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
+                                            style="width:100%; height:100%; object-fit:cover; border-radius:12px;">
+                                        {% else %}
+                                        <i class="fas fa-user"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div><strong>{{ member.full_name }}</strong><br><small>{{ member.member_id
+                                            }}</small>
+                                        <div class="nrc-number-preview mt-1">{{ member.nrc_number if member.nrc_number
+                                            else 'NRC: --' }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-2"><small>🔖 hover to flip →</small></div>
+                            </div>
+                            <div class="id-card-back">
+                                <div><strong>🏛️ ZCAS PROPERTY</strong></div>
+                                <div class="mt-2">📞 +260211222508<br>library@zcasu.edu.zm</div>
+                                <div class="mt-2"><i class="fas fa-qrcode"></i> SCAN AT GATE</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted text-center small mt-2"><i class="fas fa-mouse-pointer"></i> Hover to preview
+                        the back side design</p>
                 </div>
             </div>
         </div>
 
-        <!-- Payment History -->
+        <!-- Payment history -->
         <div class="row mt-4 payment-section">
             <div class="col-12">
                 <div class="card shadow-sm">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-history me-2"></i>Payment History
-                        </h5>
-                    </div>
+                    <div class="card-header bg-dark text-white"><i class="fas fa-history"></i> Payment History</div>
                     <div class="card-body">
                         {% if member.payments %}
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
+                            <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Receipt Number</th>
+                                        <th>Receipt</th>
                                         <th>Amount</th>
-                                        <th>Payment Method</th>
+                                        <th>Method</th>
                                         <th>Date</th>
                                         <th>Received By</th>
                                         <th>Actions</th>
@@ -701,35 +654,27 @@
                                 <tbody>
                                     {% for payment in member.payments %}
                                     <tr>
-                                        <td><strong>{{ payment.receipt_number }}</strong></strong></td>
+                                        <td><strong>{{ payment.receipt_number }}</strong></td>
                                         <td>K{{ "%.2f"|format(payment.amount) }}</td>
-                                        <td><span class="badge bg-info">{{ payment.payment_method }}</span></td>
-                                        <td>{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>{{ payment.payment_method }}</td>
+                                        <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
                                         <td>{{ payment.received_by }}</td>
-                                        <td>
-                                            <a href="{{ url_for('print_receipt', payment_id=payment.id) }}"
-                                                class="btn btn-sm btn-outline-primary" target="_blank"
-                                                title="Print Receipt">
-                                                <i class="fas fa-print"></i>
-                                            </a>
-                                        </td>
+                                        <td><a href="{{ url_for('print_receipt', payment_id=payment.id) }}"
+                                                class="btn btn-sm btn-outline-primary" target="_blank"><i
+                                                    class="fas fa-print"></i></a></td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                         {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-receipt fa-2x text-muted mb-3"></i>
-                            <p class="text-muted">No payment history found for this member.</p>
-                        </div>
+                        <div class="text-center py-4 text-muted">No payment history</div>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

@@ -95,6 +95,8 @@ class Member(db.Model):
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     expiry_date = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default='active')
+    rfid_uid = db.Column(db.String(50), unique=True,
+                         nullable=True)  # RFID UID field
 
     payments = db.relationship('Payment', backref='member', lazy=True)
     access_logs = db.relationship('AccessLog', backref='member', lazy=True)
@@ -242,7 +244,13 @@ def calculate_renewal_fees(membership_type, duration_months=1):
 
 @app.context_processor
 def inject_template_vars():
-    logo_exists = os.path.exists('static/images/logo.png')
+    # Check multiple possible logo locations
+    logo_exists = (
+        os.path.exists('static/images/logo.png') or
+        os.path.exists('static/uploads/logo.png') or
+        os.path.exists('images/logo.png') or
+        os.path.exists('logo.png')
+    )
     return {
         'now': datetime.utcnow(),
         'colors': ZCAS_COLORS,
@@ -1213,237 +1221,14 @@ def print_receipt(payment_id):
 @app.route('/print_id/<int:member_id>')
 @login_required
 def print_id(member_id):
+    """Print ID card using HTML/CSS template with exact specifications"""
     member = Member.query.get_or_404(member_id)
 
     try:
-        buffer = io.BytesIO()
-        card_width = 3.37 * inch
-        card_height = 2.125 * inch
-
-        c = canvas.Canvas(buffer, pagesize=(card_width, card_height))
-
-        black = colors.black
-        white = colors.white
-        dark_blue = colors.HexColor("#1E3A8A")
-        gold = colors.HexColor("#B8860B")
-
-        # ========== FRONT SIDE - WHITE BACKGROUND ==========
-        c.setFillColor(white)
-        c.rect(0, 0, card_width, card_height, fill=1, stroke=0)
-
-        c.setStrokeColor(black)
-        c.setLineWidth(1)
-        c.rect(0.05*inch, 0.05*inch, card_width-0.1*inch, card_height-0.1*inch)
-
-        header_height = 0.4 * inch
-        c.setFillColor(dark_blue)
-        c.rect(0, card_height - header_height, card_width,
-               header_height, fill=1, stroke=0)
-
-        logo_paths = [
-            os.path.join('static', 'images', 'logo.png'),
-            os.path.join('static', 'uploads', 'logo.png'),
-            os.path.join('images', 'logo.png'),
-            'logo.png'
-        ]
-
-        logo_drawn = False
-        for path in logo_paths:
-            if os.path.exists(path):
-                try:
-                    logo_size = 0.3 * inch
-                    logo_x = 0.1 * inch
-                    logo_y = card_height - header_height + \
-                        (header_height - logo_size) / 2
-                    c.drawImage(path, logo_x, logo_y, width=logo_size, height=logo_size,
-                                preserveAspectRatio=True, mask='auto')
-                    logo_drawn = True
-                    break
-                except Exception as e:
-                    print(f"Error drawing logo from {path}: {e}")
-                    continue
-
-        c.setFillColor(white)
-        c.setFont("Helvetica-Bold", 10)
-        if logo_drawn:
-            text_x = 0.5 * inch
-            c.drawString(text_x, card_height - 0.2*inch, "ZCAS UNIVERSITY")
-        else:
-            c.drawCentredString(card_width/2, card_height -
-                                0.2*inch, "ZCAS UNIVERSITY")
-
-        c.setFont("Helvetica", 7)
-        if logo_drawn:
-            c.drawString(text_x, card_height - 0.35*inch, "LIBRARY MEMBER")
-        else:
-            c.drawCentredString(card_width/2, card_height -
-                                0.35*inch, "LIBRARY MEMBER")
-
-        photo_x = 0.2 * inch
-        photo_y = card_height - header_height - 1.0 * inch
-        photo_width = 0.9 * inch
-        photo_height = 1.0 * inch
-
-        c.setStrokeColor(black)
-        c.setLineWidth(0.5)
-        c.rect(photo_x, photo_y, photo_width, photo_height)
-
-        photo_drawn = False
-        if member.photo_path:
-            possible_paths = [
-                os.path.join(app.config['UPLOAD_FOLDER'], member.photo_path),
-                os.path.join('static/uploads', member.photo_path),
-            ]
-
-            for path in possible_paths:
-                if os.path.exists(path):
-                    try:
-                        pil_img = PILImage.open(path)
-                        if pil_img.mode != 'RGB':
-                            pil_img = pil_img.convert('RGB')
-
-                        img_width, img_height = pil_img.size
-                        aspect = img_width / img_height
-
-                        target_width = photo_width - 0.04 * inch
-                        target_height = photo_height - 0.04 * inch
-
-                        if aspect > 1:
-                            new_width = target_width
-                            new_height = target_width / aspect
-                        else:
-                            new_height = target_height
-                            new_width = target_height * aspect
-
-                        x_offset = photo_x + (photo_width - new_width) / 2
-                        y_offset = photo_y + (photo_height - new_height) / 2
-
-                        c.drawImage(path, x_offset, y_offset, width=new_width,
-                                    height=new_height, preserveAspectRatio=True)
-                        photo_drawn = True
-                        break
-                    except Exception as e:
-                        print(f"Error drawing photo: {e}")
-                        continue
-
-        if not photo_drawn:
-            c.setFillColor(colors.gray)
-            c.setFont("Helvetica", 6)
-            c.drawCentredString(photo_x + photo_width/2,
-                                photo_y + photo_height/2, "PHOTO")
-
-        details_x = 1.3 * inch
-        details_y = card_height - header_height - 0.3 * inch
-
-        c.setFillColor(black)
-        c.setFont("Helvetica-Bold", 9)
-
-        name = member.full_name.upper()
-        if len(name) > 18:
-            words = name.split()
-            if len(words) >= 2:
-                name_line1 = ' '.join(words[:len(words)//2])
-                name_line2 = ' '.join(words[len(words)//2:])
-                c.drawString(details_x, details_y, name_line1)
-                c.drawString(details_x, details_y - 0.13*inch, name_line2)
-                details_y -= 0.3*inch
-            else:
-                c.drawString(details_x, details_y, name[:18])
-                if len(name) > 18:
-                    c.drawString(details_x, details_y - 0.13*inch, name[18:36])
-                details_y -= 0.26*inch
-        else:
-            c.drawString(details_x, details_y, name)
-            details_y -= 0.2*inch
-
-        c.setFont("Helvetica-Bold", 8)
-        c.drawString(details_x, details_y, f"MEMBER ID: {member.member_id}")
-        details_y -= 0.18*inch
-
-        nrc_text = member.nrc_number if member.nrc_number and member.nrc_number.strip(
-        ) else 'NOT PROVIDED'
-        if len(nrc_text) > 25:
-            nrc_text = nrc_text[:22] + '...'
-
-        c.setFont("Helvetica-Bold", 8)
-        c.setFillColor(dark_blue)
-        c.drawString(details_x, details_y, "NRC/PASSPORT: ")
-        c.setFont("Helvetica-Bold", 8)
-        c.setFillColor(black)
-        c.drawString(details_x + c.stringWidth("NRC/PASSPORT: ",
-                     "Helvetica-Bold", 8), details_y, nrc_text)
-        details_y -= 0.18*inch
-
-        footer_y = 0.2 * inch
-        c.setFont("Helvetica", 6)
-        c.setFillColor(colors.gray)
-        c.drawString(details_x, footer_y,
-                     "Library Access Card - Present for Scanning")
-
-        c.showPage()
-
-        # ========== BACK SIDE - WHITE BACKGROUND ==========
-        c.setFillColor(white)
-        c.rect(0, 0, card_width, card_height, fill=1, stroke=0)
-
-        c.setStrokeColor(dark_blue)
-        c.setLineWidth(1)
-        c.rect(0.05*inch, 0.05*inch, card_width-0.1*inch, card_height-0.1*inch)
-
-        c.setFillColor(dark_blue)
-        c.setFont("Helvetica-Bold", 8)
-        c.drawCentredString(card_width / 2, card_height -
-                            0.55 * inch, "THIS CARD REMAINS THE PROPERTY")
-        c.drawCentredString(card_width / 2, card_height -
-                            0.68 * inch, "OF ZCAS UNIVERSITY")
-
-        c.setStrokeColor(gold)
-        c.setLineWidth(0.5)
-        c.line(0.4 * inch, card_height - 0.78 * inch,
-               card_width - 0.4 * inch, card_height - 0.78 * inch)
-
-        contact_start_y = card_height - 1.05 * inch
-
-        c.setFillColor(black)
-        c.setFont("Helvetica-Bold", 8)
-        c.drawCentredString(card_width / 2, contact_start_y,
-                            "IF FOUND PLEASE CONTACT:")
-
-        c.setFont("Helvetica", 8)
-        c.setFillColor(dark_blue)
-        c.drawCentredString(card_width / 2, contact_start_y -
-                            0.18 * inch, ZCAS_CONTACT['phone'])
-        c.drawCentredString(card_width / 2, contact_start_y -
-                            0.33 * inch, ZCAS_CONTACT['email'])
-
-        c.setFont("Helvetica", 7)
-        c.setFillColor(colors.gray)
-        c.drawCentredString(card_width / 2, contact_start_y -
-                            0.48 * inch, ZCAS_CONTACT['address'])
-
-        c.setFillColor(colors.HexColor("#059669"))
-        c.setFont("Helvetica", 7)
-        c.drawCentredString(card_width / 2, contact_start_y -
-                            0.63 * inch, ZCAS_CONTACT['website'])
-
-        c.setFillColor(dark_blue)
-        c.setFont("Helvetica-Bold", 7)
-        c.drawCentredString(card_width / 2, contact_start_y -
-                            0.85 * inch, "SCAN AT GATE FOR ACCESS")
-
-        c.setFillColor(colors.gray)
-        c.setFont("Helvetica-Oblique", 6)
-        c.drawCentredString(card_width / 2, 0.18 * inch,
-                            "Report lost card immediately | Membership verified electronically")
-
-        c.showPage()
-        c.save()
-
-        buffer.seek(0)
-
-        return send_file(buffer, as_attachment=False,
-                         download_name=f"ZCAS_ID_{member.member_id}.pdf",
-                         mimetype='application/pdf')
+        # Render the HTML template for ID card printing
+        return render_template('print_id_card.html',
+                               member=member,
+                               contact_info=ZCAS_CONTACT)
 
     except Exception as e:
         print(f"Error in print_id: {str(e)}")
@@ -1452,29 +1237,34 @@ def print_id(member_id):
         return redirect(url_for('view_members'))
 
 
-# ========== USB READER SCANNING ROUTES ==========
+# ========== RFID SCANNING ROUTES ==========
 
-@app.route('/api/scan_member', methods=['POST'])
-def api_scan_member():
-    """API endpoint for USB reader - handles check-in/out with member photo"""
+@app.route('/api/scan_rfid', methods=['POST'])
+def api_scan_rfid():
+    """API endpoint for RFID reader - finds member by RFID UID or Member ID"""
     try:
         data = request.get_json()
-        member_id = data.get('member_id')
+        scanned_id = data.get('rfid_uid', '').strip()
 
-        if not member_id:
+        if not scanned_id:
             return jsonify({
                 'success': False,
-                'error': 'No member ID provided',
-                'message': 'Please scan a valid member ID'
+                'error': 'No RFID UID provided',
+                'message': 'Please scan a valid RFID card'
             }), 400
 
-        member = Member.query.filter_by(member_id=member_id).first()
+        # First try to find by RFID UID
+        member = Member.query.filter_by(rfid_uid=scanned_id).first()
+
+        # If not found by RFID, try by member ID (for backward compatibility)
+        if not member:
+            member = Member.query.filter_by(member_id=scanned_id).first()
 
         if not member:
             return jsonify({
                 'success': False,
                 'error': 'Member not found',
-                'message': f'No member found with ID: {member_id}'
+                'message': f'No member found with RFID or ID: {scanned_id}'
             }), 404
 
         # Check membership expiry
@@ -1552,7 +1342,8 @@ def api_scan_member():
                 'message': f'Goodbye {member.full_name}! You have been checked out.',
                 'duration_minutes': duration_minutes,
                 'check_in_time': current_session.check_in_time.strftime('%I:%M %p'),
-                'check_out_time': check_out_time.strftime('%I:%M %p')
+                'check_out_time': check_out_time.strftime('%I:%M %p'),
+                'rfid_uid': member.rfid_uid
             })
         else:
             # Member is outside - check them in
@@ -1583,12 +1374,137 @@ def api_scan_member():
                 'expiry_date': member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else None,
                 'days_remaining': days_remaining,
                 'message': f'Welcome {member.full_name}! Check-in successful.',
-                'check_in_time': datetime.utcnow().strftime('%I:%M %p')
+                'check_in_time': datetime.utcnow().strftime('%I:%M %p'),
+                'rfid_uid': member.rfid_uid
             })
 
     except Exception as e:
-        print(f"Error in scan_member: {e}")
+        print(f"Error in scan_rfid: {e}")
         traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'message': f'Error processing scan: {str(e)}'
+        }), 500
+
+
+@app.route('/api/check_rfid/<rfid_uid>')
+def api_check_rfid(rfid_uid):
+    """Check if RFID is already assigned to a member"""
+    try:
+        member = Member.query.filter_by(rfid_uid=rfid_uid).first()
+        if member:
+            return jsonify({
+                'assigned': True,
+                'member_id': member.member_id,
+                'member_name': member.full_name
+            })
+        return jsonify({'assigned': False})
+    except Exception as e:
+        return jsonify({'assigned': False, 'error': str(e)}), 500
+
+
+@app.route('/api/assign_rfid_to_member', methods=['POST'])
+@login_required
+def api_assign_rfid_to_member():
+    """Assign RFID UID to a member"""
+    try:
+        data = request.get_json()
+        member_id = data.get('member_id')
+        rfid_uid = data.get('rfid_uid')
+
+        if not member_id or not rfid_uid:
+            return jsonify({'success': False, 'message': 'Missing member ID or RFID UID'}), 400
+
+        # Check if RFID is already assigned to another member
+        existing = Member.query.filter_by(rfid_uid=rfid_uid).first()
+        if existing and existing.id != member_id:
+            return jsonify({'success': False, 'message': f'RFID already assigned to {existing.full_name}'}), 400
+
+        member = Member.query.get(member_id)
+        if not member:
+            return jsonify({'success': False, 'message': 'Member not found'}), 404
+
+        member.rfid_uid = rfid_uid
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'RFID assigned successfully',
+            'member_name': member.full_name,
+            'member_id': member.member_id
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/search_members')
+@login_required
+def api_search_members():
+    """Search members by name, ID, or NRC"""
+    try:
+        query = request.args.get('q', '').strip()
+        if not query:
+            return jsonify({'success': True, 'members': []})
+
+        members = Member.query.filter(
+            db.or_(
+                Member.full_name.ilike(f'%{query}%'),
+                Member.member_id.ilike(f'%{query}%'),
+                Member.nrc_number.ilike(f'%{query}%')
+            )
+        ).limit(10).all()
+
+        members_data = []
+        for member in members:
+            members_data.append({
+                'id': member.id,
+                'member_id': member.member_id,
+                'full_name': member.full_name,
+                'nrc_number': member.nrc_number,
+                'rfid_assigned': bool(member.rfid_uid)
+            })
+
+        return jsonify({'success': True, 'members': members_data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/remove_rfid/<int:member_id>', methods=['POST'])
+@login_required
+def api_remove_rfid(member_id):
+    """Remove RFID assignment from a member"""
+    try:
+        member = Member.query.get_or_404(member_id)
+        member.rfid_uid = None
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'RFID removed from {member.full_name}'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ========== USB READER SCANNING ROUTES (Legacy) ==========
+
+@app.route('/api/scan_member', methods=['POST'])
+def api_scan_member():
+    """Legacy API endpoint for USB reader - redirects to RFID scan"""
+    try:
+        data = request.get_json()
+        member_id = data.get('member_id')
+
+        # Create a new request with the same data but to the RFID endpoint
+        from flask import Request
+        rfid_data = {'rfid_uid': member_id}
+
+        # Call the RFID scan function internally
+        with app.test_request_context(json=rfid_data):
+            return api_scan_rfid()
+
+    except Exception as e:
         return jsonify({
             'success': False,
             'error': 'Server error',
@@ -1683,7 +1599,7 @@ def get_member_photo(member_id):
 @app.route('/scan_member', methods=['GET'])
 @login_required
 def scan_member():
-    """Page for USB reader scanning interface"""
+    """Page for RFID/USB reader scanning interface"""
     return render_template('scan_member.html')
 
 
@@ -1783,7 +1699,8 @@ def get_member_info(member_id):
             'full_name': member.full_name,
             'is_expired': is_expired,
             'status': 'expired' if is_expired else 'active',
-            'membership_type': member.membership_type
+            'membership_type': member.membership_type,
+            'rfid_assigned': bool(member.rfid_uid)
         })
     except Exception as e:
         return jsonify({'found': False, 'error': str(e)}), 500
@@ -1933,7 +1850,8 @@ def debug_db():
                 'nrc_number': member.nrc_number if hasattr(member, 'nrc_number') else None,
                 'nationality': member.nationality if hasattr(member, 'nationality') else None,
                 'registration_date': member.registration_date.strftime('%Y-%m-%d') if member.registration_date else None,
-                'expiry_date': member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else None
+                'expiry_date': member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else None,
+                'rfid_uid': member.rfid_uid if hasattr(member, 'rfid_uid') else None
             })
 
         recent_payments = Payment.query.order_by(

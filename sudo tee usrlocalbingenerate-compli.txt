@@ -1,0 +1,326 @@
+sudo tee /usr/local/bin/generate-compliance-report >/dev/null <<'EOF'
+#!/bin/bash
+REPORT_DATE=$(date +%Y-%m-%d)
+DASHBOARD_UID="iso27005-openstack-compliance"
+OUTPUT_DIR="/var/www/html/compliance-reports"
+GRAFANA_API_KEY="eyJrIjoiOWwwbmprb1dXSHdncFJaMW1iOWtYdWV0MkJJSm93c1IiLCJuIjoiUERGLUdSQUZBTkEiLCJpZCI6MX0"  # Replace with your actual key
+
+mkdir -p "$OUTPUT_DIR"
+
+curl -s -H "Authorization: Bearer $GRAFANA_API_KEY" \
+  "http://localhost:3000/api/dashboards/uid/${DASHBOARD_UID}/export?format=pdf&theme=light" \
+  -o "${OUTPUT_DIR}/ISO27005-Compliance-${REPORT_DATE}.pdf"
+EOF
+
+
+
+
+
+[auth.generic_oauth]
+enabled = true
+name = OpenStack
+client_id = admin
+client_secret = secret
+scopes = franklindoroba@gmail.com
+auth_url = https://localhost:5000/v3/auth/tokens
+token_url = https://localhost:5000/v3/auth/tokens
+api_url = https://localhost:5000/v3
+allowed_domains = localhost.com
+role_attribute_path = contains(roles[*].name, 'admin') && 'Admin' || contains(roles[*].name, 'editor') && 'Editor' || 'Viewer'
+
+
+
+
+
+
+
+
+#!/usr/bin/env python3
+import mysql.connector
+from prometheus_api_client import PrometheusConnect
+from datetime import datetime
+
+# Configuration
+MYSQL_CONFIG = {
+    'host': 'localhost',
+    'user': 'keystone',
+    'password': 'Ryan1128',
+    'database': 'keystone'
+}
+
+PROMETHEUS_URL = 'http://localhost:9090'
+
+def check_mysql_connections():
+    """Check Keystone database connectivity"""
+    try:
+        conn = mysql.connector.connect(**MYSQL_CONFIG)
+        cursor = conn.cursor()
+        cursor.execute("SHOW STATUS LIKE 'Threads_connected'")
+        connections = cursor.fetchone()[1]
+        conn.close()
+        return int(connections)
+    except Exception as e:
+        print(f"MySQL Error: {str(e)}")
+        return -1
+
+def query_prometheus_metrics():
+    """Query Prometheus for compliance data"""
+    try:
+        prom = PrometheusConnect(url=PROMETHEUS_URL)
+        
+        # Example: Get count of non-compliant ports
+        non_compliant = prom.custom_query('count(iso27005_port_compliance{compliant="false"})')
+        nc_count = int(non_compliant[0]['value'][1]) if non_compliant else 0
+        
+        # Example: Get NTP sync status
+        ntp_offset = prom.custom_query('abs(iso27005_ntp_offset_seconds)')
+        offset = float(ntp_offset[0]['value'][1]) if ntp_offset else 0.0
+        
+        return {
+            'non_compliant_ports': nc_count,
+            'ntp_offset_seconds': offset
+        }
+    except Exception as e:
+        print(f"Prometheus Error: {str(e)}")
+        return None
+
+def generate_report():
+    """Generate compliance report"""
+    report = {
+        'timestamp': datetime.now().isoformat(),
+        'mysql_connections': check_mysql_connections(),
+        **query_prometheus_metrics()
+    }
+    
+    # Format as CSV (or modify for PDF/other formats)
+    csv_output = f"""Compliance Report - {report['timestamp']}
+MySQL Connections: {report['mysql_connections']}
+Non-Compliant Ports: {report.get('non_compliant_ports', 'N/A')}
+NTP Offset (seconds): {report.get('ntp_offset_seconds', 'N/A')}
+"""
+    return csv_output
+
+if __name__ == "__main__":
+    try:
+        report = generate_report()
+        print(report)
+        
+        # Save to file (modify path as needed)
+        with open('/var/www/html/compliance-reports/latest_report.txt', 'w') as f:
+            f.write(report)
+            
+    except Exception as e:
+        print(f"Report generation failed: {str(e)}"
+
+
+
+
+
+
+#!/usr/bin/env python3
+from flask import Flask, jsonify, request, send_file
+from flask_cors import CORS
+import mysql.connector
+from prometheus_api_client import PrometheusConnect
+import pdfkit
+from datetime import datetime
+import os
+
+app = Flask(__name__)
+CORS(app)  # Enable CORS for Grafana
+
+# Configuration
+MYSQL_CONFIG = {
+    'host': 'localhost',
+    'user': 'keystone',
+    'password': 'Ryan1128',
+    'database': 'keystone'
+}
+
+PROMETHEUS_URL = 'http://localhost:9090'
+PDF_CONFIG = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
+REPORT_DIR = '/var/www/html/compliance-reports'
+
+# Ensure report directory exists
+os.makedirs(REPORT_DIR, exist_ok=True)
+
+@app.route('/api/compliance', methods=['GET'])
+def get_compliance():
+    """Endpoint for Grafana to fetch compliance data"""
+    try:
+        prom = PrometheusConnect(url=PROMETHEUS_URL)
+        
+        # Get metrics
+        non_compliant = prom.custom_query('count(iso27005_port_compliance{compliant="false"})')
+        ntp_offset = prom.custom_query('abs(iso27005_ntp_offset_seconds)')
+        
+        # MySQL check
+        mysql_conn = mysql.connector.connect(**MYSQL_CONFIG)
+        cursor = mysql_conn.cursor()
+        cursor.execute("SHOW STATUS LIKE 'Threads_connected'")
+        mysql_connections = cursor.fetchone()[1]
+        mysql_conn.close()
+
+        return jsonify({
+            'timestamp': datetime.now().isoformat(),
+            'non_compliant_ports': int(non_compliant[0]['value'][1]) if non_compliant else 0,
+            'ntp_offset': float(ntp_offset[0]['value'][1]) if ntp_offset else 0.0,
+            'mysql_connections': mysql_connections,
+            'status': 'success'
+        })
+    
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/report', methods=['GET'])
+def generate_report():
+    """Generate PDF report"""
+    try:
+        # HTML template
+        html = f"""
+        <html><body>
+            <h1>Compliance Report</h1>
+            <p>Generated: {datetime.now().isoformat()}</p>
+            <!-- Add your report content here -->
+        </body></html>
+        """
+        
+        # Generate PDF
+        pdf_path = os.path.join(REPORT_DIR, 'compliance_report.pdf')
+        pdfkit.from_string(html, pdf_path, configuration=PDF_CONFIG)
+        
+        return send_file(pdf_path, as_attachment=True)
+    
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5001, debug=True)
+
+
+
+Verify the API is working
+ curl http://localhost:5001/api/compliance
+
+
+
+
+
+# compliance_metrics.py
+from prometheus_client import start_http_server, Gauge
+import time
+import subprocess
+import socket
+
+# Create metrics
+COMPLIANCE_STATUS = Gauge('compliance_status', 
+                         'ISO 27005 Compliance Status',
+                         ['standard', 'component', 'instance'])
+
+UNAUTHORIZED_PORTS = Gauge('unauthorized_ports_count',
+                         'Count of unauthorized open ports',
+                         ['instance'])
+
+def scan_ports():
+    """Scan for open ports on localhost"""
+    open_ports = []
+    # Common ports to check (you can customize this list)
+    ports_to_scan = [22, 21, 80, 443, 5000, 80, 9103, 8080, 8774, 8775, 9292, 9696]
+    
+    for port in ports_to_scan:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)  # 1 second timeout
+            result = s.connect_ex(('127.0.0.1', port))
+            if result == 0:
+                open_ports.append(port)
+    return open_ports
+
+def check_ports():
+    """Check for unauthorized ports"""
+    allowed_ports = {1883, 3000, 3306, 5001, 5432, 631, 6379, 9090, 9100, 9182, 9392, 9559}
+    open_ports = scan_ports()  # Now this function exists
+    unauthorized = [p for p in open_ports if p not in allowed_ports]
+    
+    UNAUTHORIZED_PORTS.labels(instance=socket.gethostname()).set(len(unauthorized))
+    
+    if len(unauthorized) > 0:
+        COMPLIANCE_STATUS.labels(standard='ISO27005-2022',
+                               component='port_protection',
+                               instance=socket.gethostname()).set(0)
+    else:
+        COMPLIANCE_STATUS.labels(standard='ISO27005-2022',
+                               component='port_protection',
+                               instance=socket.gethostname()).set(1)
+
+def check_ntp():
+    """Check NTP synchronization"""
+    try:
+        result = subprocess.run(['ntpstat'], stdout=subprocess.PIPE)
+        if result.returncode == 0:
+            COMPLIANCE_STATUS.labels(standard='ISO27005-2022',
+                                   component='clock_sync',
+                                   instance=socket.gethostname()).set(1)
+        else:
+            COMPLIANCE_STATUS.labels(standard='ISO27005-2022',
+                                   component='clock_sync',
+                                   instance=socket.gethostname()).set(0)
+    except:
+        COMPLIANCE_STATUS.labels(standard='ISO27005-2022',
+                               component='clock_sync',
+                               instance=socket.gethostname()).set(0)
+
+if __name__ == '__main__':
+    start_http_server(8000)
+    while True:
+        check_ports()
+        check_ntp()
+        time.sleep(60)
+
+
+
+1. I DO Nigerian Movies 2025 Latest Full Movies IK OGBONNA MERCY ISOYIP #africanfilms
+2. STOLEN CROWN FULL MOVIE - LATEST NOLLYWOOD NIGERIAN MOVIE 2025
+3. Royal Damage: You Can’t Regret Watching This Super Interesting Movie- African Movies
+
+
+
+
+
+
+Report shows the system is not compliant with ISO 27005:2022 standard which is remote diagnostic and configuration port protection, the status is in RED. Some ports required by OpenStack are compliant with ISO 27005:2022 Standard and the status shows green colour. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

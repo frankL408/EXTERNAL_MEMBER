@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print ID Card - {{ member.full_name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        body {
+            background: white;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .id-card-print-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .print-front-page,
+        .print-back-page {
+            page-break-after: always;
+            page-break-inside: avoid;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        .print-id-card {
+            width: 350pt !important;
+            background-color: #160a25 !important;
+            padding: 15px !important;
+            height: 250px !important;
+            break-inside: avoid !important;
+            display: flex;
+            flex-direction: column;
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+            margin: 0 auto;
+        }
+
+        .print-id-card-front,
+        .print-id-card-back {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #fef9f0 0%, #ffffff 100%);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .print-id-card-front {
+            justify-content: space-between;
+        }
+
+        .print-id-card-back {
+            background: linear-gradient(135deg, #FFF6E8 0%, #ffffff 100%);
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Header with logo */
+        .custom-id-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 19pt !important;
+            font-weight: bold !important;
+            color: #FFF !important;
+            text-align: center !important;
+            font-family: arial, sans-serif !important;
+            background-color: #301934 !important;
+            padding: 2pt !important;
+            border-radius: 12px 12px 0 0;
+            margin: -4px -4px 12px -4px;
+            line-height: 1.2;
+        }
+
+        .header-logo {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+        }
+
+        .id-photo-area {
+            display: flex;
+            gap: 14px;
+            margin: 6px 6px 8px 6px;
+            align-items: center;
+        }
+
+        .photo-box {
+            width: 85px;
+            height: 85px;
+            background: #f2eef5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e9d7f0;
+            overflow: hidden;
+        }
+
+        .photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .member-details {
+            flex: 1;
+        }
+
+        .member-name {
+            font-size: 13pt;
+            font-weight: 800;
+            font-family: 'Arial', sans-serif;
+            color: #160a25;
+            margin-bottom: 4px;
+        }
+
+        .member-id-text {
+            font-size: 9pt;
+            color: #4a3b5e;
+            font-weight: 500;
+        }
+
+        .nrc-chip {
+            background: #ede7f6;
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 8pt;
+            font-weight: 700;
+            font-family: monospace;
+            color: #301934;
+            margin-top: 6px;
+        }
+
+        .library-badge {
+            text-align: center;
+            margin-top: auto;
+            padding-top: 6px;
+        }
+
+        .library-badge span {
+            font-size: 7pt;
+            color: #5c4680;
+            background: #f4edfc;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 6pt;
+            font-style: italic;
+            color: #6c5b7b;
+            border-top: 1px dashed #ddcee8;
+            padding-top: 6px;
+            margin-top: 5px;
+        }
+
+        /* Property notice styling - prominent on back */
+        .back-property-notice {
+            font-size: 11pt;
+            font-weight: 900;
+            color: #301934;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #c084fc;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .property-text {
+            background: #efdffb;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-weight: 800;
+            color: #301934;
+            font-size: 10pt;
+            display: inline-block;
+        }
+
+        .separator-line {
+            width: 65px;
+            height: 2px;
+            background: #B8860B;
+            margin: 10px auto;
+        }
+
+        .contact-details {
+            margin: 8px 0;
+        }
+
+        .contact-item {
+            margin-bottom: 8px;
+            font-size: 0.68rem;
+            line-height: 1.3;
+            color: #1f1a2e;
+        }
+
+        .contact-label {
+            font-weight: 800;
+            color: #301934;
+        }
+
+        .scan-instruction {
+            background: #30193418;
+            font-weight: bold;
+            border-radius: 50px;
+            padding: 5px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.6rem;
+            color: #301934;
+        }
+
+        .important-note {
+            font-size: 7pt;
+            margin-top: 10px;
+            color: #5c4b6e;
+            border-top: 1px solid #decdf0;
+            padding-top: 8px;
+            width: 100%;
+        }
+
+        .print-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .print-button button {
+            background: #301934;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .print-button button:hover {
+            background: #1e0f24;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background: white;
+            }
+
+            .print-button {
+                display: none;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="print-button">
+        <button onclick="window.print();"><i class="fas fa-print"></i> Print ID Card</button>
+    </div>
+
+    <div class="id-card-print-container">
+        <!-- FRONT SIDE -->
+        <div class="print-front-page">
+            <div class="print-id-card">
+                <div class="print-id-card-front">
+                    <div class="custom-id-header">
+                        <!-- Check common logo locations -->
+                        {% if logo_exists %}
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" class="header-logo" alt="Logo"
+                            onerror="this.style.display='none'">
+                        {% else %}
+                        {% set alt_logo = url_for('static', filename='uploads/logo.png') %}
+                        <img src="{{ alt_logo }}" class="header-logo" alt="Logo" onerror="this.style.display='none'">
+                        {% endif %}
+
+                        ZCAS UNIVERSITY
+                    </div>
+                    <div class="id-photo-area">
+                        <div class="photo-box">
+                            {% if member.photo_path %}
+                            <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}" alt="Photo">
+                            {% else %}
+                            <i class="fas fa-camera fa-2x" style="color:#b6a2d6;"></i>
+                            {% endif %}
+                        </div>
+                        <div class="member-details">
+                            <div class="member-name">{{ member.full_name }}</div>
+                            <div class="member-id-text">ID: {{ member.member_id }}</div>
+                            <div class="nrc-chip">
+                                📘 NRC: {{ member.nrc_number if member.nrc_number else 'Not provided' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="library-badge">
+                        <span>🔖 LIBRARY ACCESS – SCAN AT GATE</span>
+                    </div>
+                    <div class="footer-note">
+                        Valid membership • electronic verification
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BACK SIDE -->
+        <div class="print-back-page">
+            <div class="print-id-card">
+                <div class="print-id-card-back">
+                    <!-- PROMINENT PROPERTY NOTICE - Added as requested -->
+                    <div class="back-property-notice">
+                        <i class="fas fa-gavel"></i> THIS CARD IS PROPERTY OF ZCAS UNIVERSITY <i
+                            class="fas fa-gavel"></i>
+                    </div>
+
+                    <div class="property-text">
+                        🏛️ PROPERTY OF ZCAS UNIVERSITY
+                    </div>
+                    <div class="separator-line"></div>
+                    <div class="contact-details">
+                        <div class="contact-item"><span class="contact-label">📞 IF FOUND CONTACT:</span><br>{{
+                            contact_info.phone if contact_info else '+260211222508' }}</div>
+                        <div class="contact-item"><span class="contact-label">✉️ Email:</span><br>{{ contact_info.email
+                            if contact_info else 'library@zcasu.edu.zm' }}</div>
+                        <div class="contact-item"><span class="contact-label">📍 Address:</span><br>{{
+                            contact_info.address if contact_info else 'ZCAS University Library, Lusaka, Zambia' }}</div>
+                        <div class="contact-item"><span class="contact-label">🌐 Website:</span><br>{{
+                            contact_info.website if contact_info else 'www.zcasu.edu.zm' }}</div>
+                    </div>
+                    <div class="scan-instruction">
+                        <i class="fas fa-qrcode"></i> SCAN AT GATE FOR ACCESS
+                    </div>
+                    <div class="important-note">
+                        <i class="fas fa-shield-alt"></i> Report lost card immediately | Membership verified
+                        electronically
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-trigger print dialog when page loads
+        window.onload = function () {
+            setTimeout(function () {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+
+</html>
