@@ -4,13 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ZCAS University ID Card – Print Ready (2-Sides)</title>
+    <title>ZCAS University ID Card – External Member | Print Ready (2-Sides)</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            /* Force exact print colors */
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
         }
@@ -27,17 +26,15 @@
             min-height: 100vh;
         }
 
-        /* PRINT CONTAINER: simulates two physical pages (front/back) */
         .id-card-print-container {
             max-width: 100%;
             margin: 0 auto;
         }
 
-        /* Each "page" will be forced to fit on a separate sheet when printed (front + back) */
+        /* Each page forces a new sheet (front on page1, back on page2) */
         .print-front-page,
         .print-back-page {
             page-break-after: always;
-            /* front and back on separate pages */
             page-break-inside: avoid;
             break-inside: avoid;
             margin: 0;
@@ -49,11 +46,9 @@
             width: 100%;
         }
 
-        /* CARD BASE — dimension optimized for 2-sided printing on standard ID card size */
-        /* Dimensions reduced to fit front+back on one sheet without overflow, but still readable */
+        /* CARD container - no outer extra border line, only clean card style */
         .print-id-card {
             width: 320pt !important;
-            /* ~112mm — typical ID width */
             min-width: 260pt;
             max-width: 340pt;
             background-color: #160a25 !important;
@@ -65,7 +60,7 @@
             page-break-inside: avoid;
         }
 
-        /* unified front/back inner styles */
+        /* unified front/back inner panels */
         .print-id-card-front,
         .print-id-card-back {
             width: 100%;
@@ -91,60 +86,78 @@
             min-height: 210px;
         }
 
-        /* Compact header — full university name */
+        /* HEADER with blue ribbon effect (no border line) */
         .custom-id-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #1E3A8A !important;
+            /* Deep blue ribbon */
+            color: white !important;
+            padding: 8px 6px 6px 6px !important;
+            border-radius: 12px 12px 12px 12px;
+            margin: -6px -6px 10px -6px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Logo + University name row inside ribbon */
+        .header-main {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             font-size: 13pt !important;
             font-weight: 800 !important;
-            color: #FFF !important;
-            background-color: #301934 !important;
-            padding: 6px 6px !important;
-            border-radius: 10px 10px 0 0;
-            margin: -6px -6px 8px -6px;
-            line-height: 1.2;
-            letter-spacing: 0px;
             text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        /* Responsive: if screen too small, allow wrap but keep full name */
-        @media (max-width: 380px) {
-            .custom-id-header {
-                font-size: 11pt !important;
-                white-space: normal;
-                text-align: center;
-                flex-wrap: wrap;
-            }
+            letter-spacing: 0.5px;
+            flex-wrap: wrap;
         }
 
         .header-logo {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             object-fit: contain;
+            filter: brightness(0) invert(1);
+            /* makes logo stand out on blue background */
         }
 
-        /* ID photo area: tight spacing */
+        /* External Member ID line - subtle but elegant */
+        .external-member-badge {
+            font-size: 8pt;
+            font-weight: 600;
+            background: rgba(255, 255, 240, 0.2);
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 40px;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
+            backdrop-filter: brightness(1.1);
+            color: #FFECB3;
+            font-family: monospace;
+        }
+
+        /* ID photo area tight & clean */
         .id-photo-area {
             display: flex;
-            gap: 10px;
-            margin: 4px 2px 6px 2px;
+            gap: 12px;
+            margin: 6px 4px 8px 4px;
             align-items: center;
         }
 
         .photo-box {
-            width: 70px;
-            height: 70px;
-            background: #f2eef5;
-            border-radius: 10px;
+            width: 75px;
+            height: 75px;
+            background: #f8f4ff;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #e2d0f0;
+            border: 2px solid #d9c8f0;
             overflow: hidden;
             flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .photo-box img {
@@ -162,7 +175,7 @@
             font-weight: 800;
             font-family: 'Arial', sans-serif;
             color: #160a25;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
             line-height: 1.2;
         }
 
@@ -175,27 +188,27 @@
         .nrc-chip {
             background: #ede7f6;
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 18px;
+            padding: 2px 8px;
+            border-radius: 20px;
             font-size: 7.5pt;
             font-weight: 700;
             font-family: monospace;
             color: #301934;
-            margin-top: 4px;
+            margin-top: 5px;
         }
 
         .library-badge {
             text-align: center;
-            margin-top: 4px;
+            margin-top: 5px;
             margin-bottom: 2px;
         }
 
         .library-badge span {
-            font-size: 6.5pt;
+            font-size: 6.8pt;
             color: #5c4680;
             background: #f4edfc;
-            padding: 2px 6px;
-            border-radius: 16px;
+            padding: 3px 8px;
+            border-radius: 18px;
             font-weight: 600;
         }
 
@@ -206,38 +219,34 @@
             color: #6c5b7b;
             border-top: 1px dashed #ddcee8;
             padding-top: 5px;
-            margin-top: 3px;
+            margin-top: 4px;
         }
 
-        /* Back side condensed – Property notice prominent but compact */
+        /* BACK SIDE — property notice + contact */
         .back-property-notice {
             font-size: 9pt;
             font-weight: 900;
             color: #301934;
             text-transform: uppercase;
             background: #f3e8ff;
-            padding: 4px 6px;
+            padding: 5px 6px;
             border-radius: 8px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             width: 100%;
             text-align: center;
             border: 1px solid #c084fc;
             letter-spacing: 0.3px;
         }
 
-        .back-property-notice i {
-            font-size: 9pt;
-        }
-
         .property-text {
             background: #efdffb;
-            padding: 3px 10px;
-            border-radius: 28px;
+            padding: 3px 12px;
+            border-radius: 30px;
             font-weight: 800;
             color: #301934;
             font-size: 8pt;
             display: inline-block;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
         }
 
         .separator-line {
@@ -248,7 +257,7 @@
         }
 
         .contact-details {
-            margin: 4px 0;
+            margin: 5px 0;
             text-align: left;
             width: 100%;
             font-size: 0.65rem;
@@ -271,25 +280,25 @@
             background: #30193418;
             font-weight: bold;
             border-radius: 40px;
-            padding: 3px 10px;
+            padding: 3px 12px;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             font-size: 0.6rem;
             color: #301934;
-            margin-top: 4px;
+            margin-top: 5px;
         }
 
         .important-note {
             font-size: 6pt;
-            margin-top: 6px;
+            margin-top: 7px;
             color: #5c4b6e;
             border-top: 1px solid #decdf0;
             padding-top: 6px;
             width: 100%;
         }
 
-        /* Print button remains accessible - NO WATERMARK, NO REPLIT MARK */
+        /* Print button */
         .print-button {
             position: fixed;
             bottom: 22px;
@@ -298,10 +307,10 @@
         }
 
         .print-button button {
-            background: #301934;
+            background: #1E3A8A;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 22px;
             border-radius: 32px;
             font-size: 15px;
             font-weight: bold;
@@ -312,11 +321,11 @@
         }
 
         .print-button button:hover {
-            background: #1f0f28;
+            background: #0f2a6b;
             transform: scale(1.02);
         }
 
-        /* PRINT specific adjustments — guarantee two separate pages (front & back) */
+        /* PRINT optimization: forces two separate pages (front & back) and removes any extra borders */
         @media print {
             body {
                 margin: 0;
@@ -344,26 +353,25 @@
                 max-width: 320pt;
             }
 
-            /* Ensure card content does not break awkwardly */
             .print-id-card-front,
             .print-id-card-back {
                 break-inside: avoid;
             }
 
-            /* Remove any potential hidden elements or watermarks if any */
-            body::before,
-            body::after,
-            .id-card-print-container::before,
-            .id-card-print-container::after {
-                display: none !important;
-                content: none !important;
+            /* ensure no stray borders appear */
+            .custom-id-header {
+                border: none !important;
+                outline: none !important;
             }
         }
 
-        /* small devices fallback */
         @media (max-width: 400px) {
             .print-id-card {
                 width: 95% !important;
+            }
+
+            .header-main {
+                font-size: 11pt !important;
             }
         }
     </style>
@@ -376,29 +384,36 @@
     </div>
 
     <div class="id-card-print-container">
-        <!-- ======================== FRONT SIDE ======================== -->
+        <!-- ==================== FRONT SIDE ==================== -->
         <div class="print-front-page">
             <div class="print-id-card">
                 <div class="print-id-card-front">
+                    <!-- Blue ribbon header with logo inside card + full university name + external member ID -->
                     <div class="custom-id-header">
-                        <!-- Logo handling: dynamic paths with fallback for Jinja2 rendering -->
-                        {% if logo_exists %}
-                        <img src="{{ url_for('static', filename='images/logo.png') }}" class="header-logo"
-                            alt="University Logo" onerror="this.style.display='none'">
-                        {% else %}
-                        {% set alt_logo = url_for('static', filename='uploads/logo.png') %}
-                        <img src="{{ alt_logo }}" class="header-logo" alt="University Logo"
-                            onerror="this.style.display='none'">
-                        {% endif %}
-                        ZCAS UNIVERSITY
+                        <div class="header-main">
+                            <!-- Logo displayed directly in header (inner) -->
+                            {% if logo_exists %}
+                            <img src="{{ url_for('static', filename='images/logo.png') }}" class="header-logo"
+                                alt="Univ Logo" onerror="this.style.display='none'">
+                            {% else %}
+                            {% set alt_logo = url_for('static', filename='uploads/logo.png') %}
+                            <img src="{{ alt_logo }}" class="header-logo" alt="Univ Logo"
+                                onerror="this.style.display='none'">
+                            {% endif %}
+                            ZCAS UNIVERSITY
+                        </div>
+                        <div class="external-member-badge">
+                            <i class="fas fa-id-card"></i> EXTERNAL MEMBER ID
+                        </div>
                     </div>
+
                     <div class="id-photo-area">
                         <div class="photo-box">
                             {% if member.photo_path %}
                             <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
                                 alt="Member Photo">
                             {% else %}
-                            <i class="fas fa-id-card fa-2x" style="color:#b6a2d6;"></i>
+                            <i class="fas fa-user-circle fa-3x" style="color:#b397d6;"></i>
                             {% endif %}
                         </div>
                         <div class="member-details">
@@ -419,15 +434,13 @@
             </div>
         </div>
 
-        <!-- ======================== BACK SIDE ======================== -->
+        <!-- ==================== BACK SIDE ==================== -->
         <div class="print-back-page">
             <div class="print-id-card">
                 <div class="print-id-card-back">
-                    <!-- PROPERTY NOTICE (prominent, reduced to fit) -->
                     <div class="back-property-notice">
                         <i class="fas fa-gavel"></i> PROPERTY OF ZCAS UNIVERSITY <i class="fas fa-gavel"></i>
                     </div>
-
                     <div class="property-text">
                         🏛️ OFFICIAL UNIVERSITY CARD
                     </div>
@@ -454,17 +467,11 @@
     </div>
 
     <script>
-        // Ensure no console messages or any hidden elements generate watermarks or external references
-        // This script only exists to keep print behavior clean.
-        // No Replit badge, no external watermark - clean ID print.
         (function () {
-            // Additional safety: remove any potential Replit-related attributes or hidden iframes if present
-            // This ensures that nothing gets injected dynamically.
+            // Clean removal of any possible watermarks or unwanted iframes
             const removeReplitMarkers = () => {
-                // Remove any element that might contain "replit" or watermark-like classes
                 const allElements = document.querySelectorAll('*');
                 allElements.forEach(el => {
-                    // Check for any attribute that might reference replit badge
                     if (el.className && typeof el.className === 'string') {
                         if (el.className.toLowerCase().includes('replit') ||
                             el.className.toLowerCase().includes('watermark') ||
@@ -478,16 +485,16 @@
                         }
                     }
                 });
-                // Also look for any script tags that might be injected by environment (safety)
+                const iframes = document.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    if (iframe.src && (iframe.src.includes('replit') || iframe.src.includes('watermark'))) {
+                        iframe.remove();
+                    }
+                });
             };
             removeReplitMarkers();
-            // Also remove any iframe watermarks that could be present from external sources
-            const iframes = document.querySelectorAll('iframe');
-            iframes.forEach(iframe => {
-                if (iframe.src && (iframe.src.includes('replit') || iframe.src.includes('watermark'))) {
-                    iframe.remove();
-                }
-            });
+            // Ensure that printed version flips correctly (already uses page-break)
+            console.log("ZCAS External Member ID Card - Ready for duplex print (front/back).");
         })();
     </script>
 </body>
