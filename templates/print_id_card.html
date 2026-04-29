@@ -89,32 +89,12 @@
         /* ========== DARK BLUE RIBBON HEADER ========== */
         .dark-blue-ribbon {
             background: linear-gradient(135deg, #0B1E4E 0%, #1E3A8A 100%);
-            padding: 12px 16px;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             width: 100%;
-        }
-
-        .ribbon-logo {
-            width: 36px;
-            height: 36px;
-            object-fit: contain;
-            filter: brightness(0) invert(1);
-        }
-
-        .ribbon-fallback-logo {
-            width: 36px;
-            height: 36px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 10px;
         }
 
         .ribbon-title {
@@ -126,9 +106,46 @@
             font-family: 'Arial', 'Helvetica Neue', sans-serif;
         }
 
+        /* Logo container with ZCAS University branding */
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 12px 0 8px 0;
+            padding: 8px;
+        }
+
+        .university-logo-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 6px;
+        }
+
+        .university-name-text {
+            font-size: 16pt;
+            font-weight: 800;
+            color: #1E3A8A;
+            text-align: center;
+            letter-spacing: 1px;
+            font-family: 'Arial', 'Helvetica Neue', sans-serif;
+            line-height: 1.2;
+        }
+
+        .university-tagline {
+            font-size: 6.5pt;
+            font-weight: 500;
+            color: #6b7280;
+            text-align: center;
+            letter-spacing: 0.5px;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
         /* Content area after ribbon */
         .card-content {
-            padding: 14px 14px 14px 14px;
+            padding: 8px 14px 14px 14px;
         }
 
         /* Member type line */
@@ -336,9 +353,13 @@
                 width: 95% !important;
             }
 
-            .ribbon-logo {
-                width: 28px;
-                height: 28px;
+            .university-logo-img {
+                width: 60px;
+                height: 60px;
+            }
+
+            .university-name-text {
+                font-size: 13pt;
             }
 
             .ribbon-title {
@@ -352,34 +373,49 @@
 <body>
     <div class="print-button-container">
         <div class="print-hint">
-            <i class="fas fa-print"></i> 2‑sided
+            <i class="fas fa-print"></i> 2‑sided print
         </div>
         <button class="print-btn" onclick="window.print();">
-            <i class="fas fa-id-card"></i> Print ID
+            <i class="fas fa-id-card"></i> Print ID Card
         </button>
     </div>
 
     <div class="id-card-print-container">
-        <!-- ==================== FRONT SIDE - Dark Blue Ribbon Header ==================== -->
+        <!-- ==================== FRONT SIDE ==================== -->
         <div class="print-front-page">
             <div class="print-id-card">
                 <div class="print-id-card-front">
-                    <!-- Dark Blue Ribbon with Logo and University Name -->
+                    <!-- Dark Blue Ribbon with University Name only -->
                     <div class="dark-blue-ribbon">
-                        <!-- Display logo with multiple fallback options -->
-                        <img src="/static/images/logo.png" class="ribbon-logo" alt="ZCAS Logo"
-                            onerror="this.onerror=null; this.src='/static/uploads/logo.png'; this.onerror=function(){ this.style.display='none'; document.getElementById('fallbackLogoIcon').style.display='flex'; }">
-
-                        <!-- Fallback icon if both logo paths fail -->
-                        <div id="fallbackLogoIcon" class="ribbon-fallback-logo" style="display: none;">
-                            <i class="fas fa-university" style="font-size: 18px; color: white;"></i>
-                        </div>
-
                         <div class="ribbon-title">ZCAS UNIVERSITY</div>
                     </div>
 
                     <!-- Content Area -->
                     <div class="card-content">
+                        <!-- ZCAS UNIVERSITY LOGO from application folder -->
+                        <div class="logo-container">
+                            <!-- Load logo from static folder - adjust path as needed -->
+                            <img src="{{ url_for('static', filename='images/logo.png') }}"> class="university-logo-img"
+                            alt="ZCAS University Logo"
+                            onerror="this.onerror=null; this.style.display='none';
+                            this.parentElement.querySelector('.logo-fallback').style.display='block';">
+
+                            <!-- Fallback SVG if image doesn't load -->
+                            <div class="logo-fallback" style="display: none;">
+                                <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="100" height="100" rx="15" fill="#1E3A8A" />
+                                    <circle cx="50" cy="50" r="35" fill="#FFD700" />
+                                    <text x="50" y="62" font-size="40" text-anchor="middle" fill="#1E3A8A"
+                                        font-weight="bold" font-family="Arial">Z</text>
+                                    <text x="50" y="88" font-size="6" text-anchor="middle" fill="#FFD700"
+                                        font-weight="bold">EST. 2000</text>
+                                </svg>
+                            </div>
+
+                            <div class="university-name-text">ZCAS UNIVERSITY</div>
+                            <div class="university-tagline">Aspire, Acquire, Prosper</div>
+                        </div>
+
                         <!-- Member type line -->
                         <div class="member-type-line">
                             {% if member.member_type == 'student' %}
@@ -453,63 +489,18 @@
 
     <script>
         (function () {
-            // Enhanced logo fallback handler
-            function ensureLogoDisplay() {
-                const logos = document.querySelectorAll('.ribbon-logo');
-                logos.forEach(logo => {
-                    // Check if logo failed to load
-                    if (logo.complete) {
-                        if (logo.naturalWidth === 0 || logo.naturalHeight === 0) {
-                            logo.style.display = 'none';
-                            const fallback = document.getElementById('fallbackLogoIcon');
-                            if (fallback) {
-                                fallback.style.display = 'flex';
-                            }
-                        }
-                    } else {
-                        logo.onerror = function () {
-                            this.style.display = 'none';
-                            const fallback = document.getElementById('fallbackLogoIcon');
-                            if (fallback) {
-                                fallback.style.display = 'flex';
-                            }
-                        };
+            // Check if logo loads, if not show fallback
+            const logo = document.querySelector('.university-logo-img');
+            if (logo) {
+                logo.onerror = function () {
+                    this.style.display = 'none';
+                    const fallback = this.parentElement.querySelector('.logo-fallback');
+                    if (fallback) {
+                        fallback.style.display = 'block';
                     }
-                });
+                };
             }
-
-            // Run after a short delay to ensure images are processed
-            setTimeout(ensureLogoDisplay, 100);
-
-            // Also run when page fully loads
-            window.addEventListener('load', ensureLogoDisplay);
-
-            // Remove any watermarks (Replit, etc.)
-            const cleanWatermarks = () => {
-                const allElements = document.querySelectorAll('*');
-                allElements.forEach(el => {
-                    if (el.className && typeof el.className === 'string') {
-                        if (el.className.toLowerCase().includes('replit') ||
-                            el.className.toLowerCase().includes('watermark') ||
-                            el.className.toLowerCase().includes('badge')) {
-                            if (el.style) el.style.display = 'none';
-                        }
-                    }
-                    if (el.id && typeof el.id === 'string') {
-                        if (el.id.toLowerCase().includes('replit') || el.id.toLowerCase().includes('watermark')) {
-                            if (el.style) el.style.display = 'none';
-                        }
-                    }
-                });
-                const iframes = document.querySelectorAll('iframe');
-                iframes.forEach(iframe => {
-                    if (iframe.src && (iframe.src.includes('replit') || iframe.src.includes('watermark'))) {
-                        iframe.remove();
-                    }
-                });
-            };
-            cleanWatermarks();
-            console.log("✅ ZCAS ID Card - Dark blue ribbon header, logo visible, no borders, no watermark. Ready for duplex printing.");
+            console.log("✅ ZCAS ID Card - Attempting to load logo from application folder. Fallback SVG ready if needed.");
         })();
     </script>
 </body>
