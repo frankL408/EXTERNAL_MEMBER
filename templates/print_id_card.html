@@ -298,31 +298,58 @@
             width: 100%;
         }
 
-        /* Print button */
-        .print-button {
+        /* PRINT BUTTON STYLES - Prominent and functional */
+        .print-button-container {
             position: fixed;
-            bottom: 22px;
-            right: 22px;
+            bottom: 25px;
+            right: 25px;
             z-index: 1000;
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
 
-        .print-button button {
-            background: #1E3A8A;
+        .print-btn {
+            background: linear-gradient(135deg, #1E3A8A 0%, #0f2a6b 100%);
             color: white;
             border: none;
-            padding: 10px 22px;
-            border-radius: 32px;
-            font-size: 15px;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-            transition: 0.2s;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
             font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
         }
 
-        .print-button button:hover {
-            background: #0f2a6b;
-            transform: scale(1.02);
+        .print-btn:hover {
+            background: linear-gradient(135deg, #0f2a6b 0%, #091d4a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+        }
+
+        .print-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Optional secondary print hint for duplex */
+        .print-hint {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            color: #1E3A8A;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: monospace;
         }
 
         /* PRINT optimization: forces two separate pages (front & back) and removes any extra borders */
@@ -333,7 +360,7 @@
                 background: white;
             }
 
-            .print-button {
+            .print-button-container {
                 display: none;
             }
 
@@ -365,6 +392,26 @@
             }
         }
 
+        @media (max-width: 550px) {
+            .print-button-container {
+                bottom: 15px;
+                right: 15px;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 8px;
+            }
+
+            .print-hint {
+                font-size: 9px;
+                padding: 4px 10px;
+            }
+
+            .print-btn {
+                padding: 8px 20px;
+                font-size: 14px;
+            }
+        }
+
         @media (max-width: 400px) {
             .print-id-card {
                 width: 95% !important;
@@ -379,8 +426,15 @@
 </head>
 
 <body>
-    <div class="print-button">
-        <button onclick="window.print();"><i class="fas fa-print"></i> Print ID Card (2-sided)</button>
+    <!-- Enhanced Print Button with modern UI & duplex hint -->
+    <div class="print-button-container">
+        <div class="print-hint">
+            <i class="fas fa-print"></i> 2‑sided print | front/back
+        </div>
+        <button class="print-btn" onclick="window.print();">
+            <i class="fas fa-id-card"></i> Print ID Card
+            <i class="fas fa-chevron-right" style="font-size: 12px;"></i>
+        </button>
     </div>
 
     <div class="id-card-print-container">
@@ -468,7 +522,7 @@
 
     <script>
         (function () {
-            // Clean removal of any possible watermarks or unwanted iframes
+            // Clean removal of any potential watermarks or unwanted iframes
             const removeReplitMarkers = () => {
                 const allElements = document.querySelectorAll('*');
                 allElements.forEach(el => {
@@ -493,8 +547,19 @@
                 });
             };
             removeReplitMarkers();
-            // Ensure that printed version flips correctly (already uses page-break)
-            console.log("ZCAS External Member ID Card - Ready for duplex print (front/back).");
+
+            // Additional helper: notification for duplex printing best practice
+            console.log("✅ ZCAS External Member ID Card - Print button ready. Ensure printer settings: 'Print on both sides' (flip on long edge).");
+
+            // Optional: show a friendly toast/alert on first load to guide user (not invasive)
+            if (typeof window.printDialogShown === 'undefined') {
+                window.printDialogShown = true;
+                // Brief info about duplex, no interruption, only if needed
+                setTimeout(() => {
+                    const hintMsg = "💡 Tip: When printing, select 'Print on both sides' (flip on long edge) for correct front/back ID.";
+                    console.log(hintMsg);
+                }, 800);
+            }
         })();
     </script>
 </body>
