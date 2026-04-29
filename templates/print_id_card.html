@@ -46,11 +46,11 @@
             width: 100%;
         }
 
-        /* ID CARD - clean, no outer border line */
+        /* ID CARD - balanced size for both sides */
         .print-id-card {
-            width: 270pt !important;
-            min-width: 250pt;
-            max-width: 290pt;
+            width: 280pt !important;
+            min-width: 260pt;
+            max-width: 300pt;
             background-color: transparent !important;
             padding: 0 !important;
             border-radius: 0;
@@ -72,10 +72,7 @@
             position: relative;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-        }
-
-        .print-id-card-front {
-            min-height: 190px;
+            min-height: 210px;
         }
 
         .print-id-card-back {
@@ -83,7 +80,6 @@
             text-align: center;
             align-items: center;
             justify-content: center;
-            min-height: 190px;
         }
 
         /* ========== DARK BLUE RIBBON HEADER ========== */
@@ -106,58 +102,50 @@
             font-family: 'Arial', 'Helvetica Neue', sans-serif;
         }
 
-        /* Logo container with ZCAS University branding */
+        /* Member type badge - placed near left corner below ribbon */
+        .member-type-badge {
+            padding: 5px 14px 0 14px;
+            text-align: left;
+        }
+
+        .badge-text {
+            display: inline-block;
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #1E3A8A;
+            background: #E0E7FF;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Logo container - centered */
         .logo-container {
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: 12px 0 8px 0;
-            padding: 8px;
+            margin: 8px 0 6px 0;
+            padding: 0;
         }
 
         .university-logo-img {
-            width: 80px;
-            height: 80px;
+            width: 55px;
+            height: 55px;
             object-fit: contain;
-            margin-bottom: 6px;
+            margin: 0;
         }
 
-        .university-name-text {
-            font-size: 16pt;
-            font-weight: 800;
-            color: #1E3A8A;
-            text-align: center;
-            letter-spacing: 1px;
-            font-family: 'Arial', 'Helvetica Neue', sans-serif;
-            line-height: 1.2;
-        }
-
-        .university-tagline {
-            font-size: 6.5pt;
-            font-weight: 500;
-            color: #6b7280;
-            text-align: center;
-            letter-spacing: 0.5px;
-            font-style: italic;
-            margin-top: 3px;
-        }
-
-        /* Content area after ribbon */
+        /* Content area after logo */
         .card-content {
-            padding: 8px 14px 14px 14px;
+            padding: 4px 16px 14px 16px;
         }
 
-        /* Member type line */
-        .member-type-line {
-            font-size: 8pt;
-            font-weight: 600;
-            color: #4b5563;
-            text-align: center;
-            border-bottom: 1.5px solid #e5e7eb;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
-            letter-spacing: 0.3px;
+        /* Divider line */
+        .divider-line {
+            width: 100%;
+            height: 1px;
+            background: #e5e7eb;
+            margin: 6px 0 8px 0;
         }
 
         /* Member details */
@@ -179,6 +167,9 @@
             margin-bottom: 5px;
             color: #374151;
             line-height: 1.35;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
         }
 
         .detail-label {
@@ -188,52 +179,53 @@
 
         .detail-value {
             font-weight: 500;
+            text-align: right;
         }
 
-        /* ========== BACK SIDE - Property notice ========== */
+        /* ========== BACK SIDE - Property notice - balanced ========== */
         .back-property-container {
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 16px 14px;
+            padding: 20px 16px;
         }
 
         .back-property-main {
-            font-size: 8.5pt;
+            font-size: 9pt;
             font-weight: 800;
             color: #1E3A8A;
             text-transform: uppercase;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             letter-spacing: 0.5px;
         }
 
         .back-divider {
-            width: 45px;
+            width: 50px;
             height: 2px;
             background: #b8860b;
-            margin: 6px auto;
+            margin: 8px auto;
         }
 
         .back-contact-block {
             text-align: center;
             width: 100%;
-            margin: 8px 0;
+            margin: 10px 0;
         }
 
         .back-contact-line {
-            font-size: 7pt;
+            font-size: 7.5pt;
             color: #4b5563;
-            margin: 4px 0;
-            line-height: 1.3;
+            margin: 5px 0;
+            line-height: 1.35;
         }
 
         .back-contact-line i {
-            margin-right: 4px;
+            margin-right: 5px;
             color: #1E3A8A;
-            font-size: 7pt;
+            font-size: 7.5pt;
         }
 
         .back-phone {
@@ -242,10 +234,10 @@
         }
 
         .back-small-note {
-            font-size: 6pt;
+            font-size: 6.5pt;
             color: #6b7280;
-            margin-top: 8px;
-            padding-top: 6px;
+            margin-top: 10px;
+            padding-top: 8px;
             border-top: 1px solid #e5e7eb;
             width: 100%;
             text-align: center;
@@ -320,7 +312,7 @@
                 box-shadow: none;
                 margin: 0 auto;
                 width: 100%;
-                max-width: 270pt;
+                max-width: 280pt;
             }
 
             .print-id-card-front,
@@ -354,16 +346,12 @@
             }
 
             .university-logo-img {
-                width: 60px;
-                height: 60px;
-            }
-
-            .university-name-text {
-                font-size: 13pt;
+                width: 45px;
+                height: 45px;
             }
 
             .ribbon-title {
-                font-size: 11pt;
+                font-size: 12pt;
             }
         }
     </style>
@@ -385,61 +373,58 @@
         <div class="print-front-page">
             <div class="print-id-card">
                 <div class="print-id-card-front">
-                    <!-- Dark Blue Ribbon with University Name only -->
+                    <!-- Dark Blue Ribbon with University Name -->
                     <div class="dark-blue-ribbon">
                         <div class="ribbon-title">ZCAS UNIVERSITY</div>
                     </div>
 
-                    <!-- Content Area -->
-                    <div class="card-content">
-                        <!-- ZCAS UNIVERSITY LOGO from application folder -->
-                        <div class="logo-container">
-                            <!-- Load logo from static folder - adjust path as needed -->
-                            <img src="{{ url_for('static', filename='images/logo.png') }}"> class="university-logo-img"
-                            alt="ZCAS University Logo"
-                            onerror="this.onerror=null; this.style.display='none';
-                            this.parentElement.querySelector('.logo-fallback').style.display='block';">
-
-                            <!-- Fallback SVG if image doesn't load -->
-                            <div class="logo-fallback" style="display: none;">
-                                <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                    <rect width="100" height="100" rx="15" fill="#1E3A8A" />
-                                    <circle cx="50" cy="50" r="35" fill="#FFD700" />
-                                    <text x="50" y="62" font-size="40" text-anchor="middle" fill="#1E3A8A"
-                                        font-weight="bold" font-family="Arial">Z</text>
-                                    <text x="50" y="88" font-size="6" text-anchor="middle" fill="#FFD700"
-                                        font-weight="bold">EST. 2000</text>
-                                </svg>
-                            </div>
-
-                            <div class="university-name-text">ZCAS UNIVERSITY</div>
-                            <div class="university-tagline">Aspire, Acquire, Prosper</div>
-                        </div>
-
-                        <!-- Member type line -->
-                        <div class="member-type-line">
+                    <!-- Member Type Badge - near left corner below ribbon -->
+                    <div class="member-type-badge">
+                        <span class="badge-text">
+                            <i class="fas fa-id-card"></i>
                             {% if member.member_type == 'student' %}
                             STUDENT ID | FULL-TIME STUDENT
                             {% else %}
                             EXTERNAL MEMBER ID
                             {% endif %}
-                        </div>
+                        </span>
+                    </div>
 
-                        <!-- Member Details -->
+                    <!-- Centered Logo -->
+                    <div class="logo-container">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" class="university-logo-img"
+                            alt="ZCAS University Logo"
+                            onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.logo-fallback').style.display='block';">
+
+                        <!-- Fallback SVG if image doesn't load -->
+                        <div class="logo-fallback" style="display: none;">
+                            <svg width="55" height="55" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="100" height="100" rx="15" fill="#1E3A8A" />
+                                <circle cx="50" cy="50" r="35" fill="#FFD700" />
+                                <text x="50" y="62" font-size="40" text-anchor="middle" fill="#1E3A8A"
+                                    font-weight="bold" font-family="Arial">Z</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Content Area with Member Details -->
+                    <div class="card-content">
+                        <div class="divider-line"></div>
+
                         <div class="member-details-section">
                             <div class="member-name-line">{{ member.full_name | upper }}</div>
                             <div class="detail-row">
-                                <span class="detail-label">MEMBER ID: </span>
+                                <span class="detail-label">MEMBER ID:</span>
                                 <span class="detail-value">{{ member.member_id }}</span>
                             </div>
                             {% if member.member_type == 'student' and member.valid_until %}
                             <div class="detail-row">
-                                <span class="detail-label">VALID UNTIL: </span>
+                                <span class="detail-label">VALID UNTIL:</span>
                                 <span class="detail-value">{{ member.valid_until }}</span>
                             </div>
                             {% elif member.nrc_number %}
                             <div class="detail-row">
-                                <span class="detail-label">NRC NUMBER: </span>
+                                <span class="detail-label">NRC NUMBER:</span>
                                 <span class="detail-value">{{ member.nrc_number }}</span>
                             </div>
                             {% endif %}
@@ -449,7 +434,7 @@
             </div>
         </div>
 
-        <!-- ==================== BACK SIDE - Property Notice & Contact ==================== -->
+        <!-- ==================== BACK SIDE - Balanced Property Notice & Contact ==================== -->
         <div class="print-back-page">
             <div class="print-id-card">
                 <div class="print-id-card-back">
@@ -499,8 +484,12 @@
                         fallback.style.display = 'block';
                     }
                 };
+                // Also check if logo already failed to load
+                if (logo.complete && (logo.naturalWidth === 0 || logo.naturalHeight === 0)) {
+                    logo.onerror();
+                }
             }
-            console.log("✅ ZCAS ID Card - Attempting to load logo from application folder. Fallback SVG ready if needed.");
+            console.log("✅ ZCAS ID Card - EXTERNAL MEMBER ID badge on left, logo centered, balanced layout ready for duplex printing.");
         })();
     </script>
 </body>
