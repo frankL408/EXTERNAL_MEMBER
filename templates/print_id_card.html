@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ZCAS University ID Card – Compact | Print Ready (2-Sides)</title>
+    <title>ZCAS University ID Card – Official | Print Ready (2-Sides)</title>
     <style>
         * {
             margin: 0;
@@ -46,34 +46,36 @@
             width: 100%;
         }
 
-        /* SMALLER ID CARD - reduced dimensions */
+        /* ID CARD - clean, no outer border line */
         .print-id-card {
-            width: 260pt !important;
-            min-width: 240pt;
-            max-width: 280pt;
-            background-color: #160a25 !important;
-            padding: 6px !important;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: 270pt !important;
+            min-width: 250pt;
+            max-width: 290pt;
+            background-color: transparent !important;
+            padding: 0 !important;
+            border-radius: 0;
+            box-shadow: none;
             margin: 8px auto;
             break-inside: avoid;
             page-break-inside: avoid;
         }
 
-        /* Inner card - clean white background */
+        /* Inner card - white background with subtle shadow */
         .print-id-card-front,
         .print-id-card-back {
             width: 100%;
             background: white;
-            border-radius: 8px;
-            padding: 12px 12px;
+            border-radius: 10px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
 
         .print-id-card-front {
-            min-height: 180px;
+            min-height: 190px;
         }
 
         .print-id-card-back {
@@ -81,80 +83,85 @@
             text-align: center;
             align-items: center;
             justify-content: center;
-            min-height: 180px;
+            min-height: 190px;
         }
 
-        /* ========== FRONT SIDE STYLES - COMPACT ========== */
-
-        /* Header with logo and university name - smaller */
-        .logo-header {
+        /* ========== DARK BLUE RIBBON HEADER ========== */
+        .dark-blue-ribbon {
+            background: linear-gradient(135deg, #0B1E4E 0%, #1E3A8A 100%);
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
         }
 
-        .university-logo {
-            width: 32px;
-            height: 32px;
+        .ribbon-logo {
+            width: 36px;
+            height: 36px;
             object-fit: contain;
+            filter: brightness(0) invert(1);
         }
 
-        .fallback-logo-text {
-            width: 32px;
-            height: 32px;
-            background: #1E3A8A;
+        .ribbon-fallback-logo {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 9px;
+            font-size: 10px;
         }
 
-        .university-title {
-            font-size: 12pt;
+        .ribbon-title {
+            font-size: 14pt;
             font-weight: 800;
-            color: #1E3A8A;
+            color: white;
             text-align: center;
-            letter-spacing: 0.3px;
+            letter-spacing: 1px;
             font-family: 'Arial', 'Helvetica Neue', sans-serif;
         }
 
-        /* Member type line - smaller */
+        /* Content area after ribbon */
+        .card-content {
+            padding: 14px 14px 14px 14px;
+        }
+
+        /* Member type line */
         .member-type-line {
-            font-size: 7.5pt;
+            font-size: 8pt;
             font-weight: 600;
             color: #4b5563;
             text-align: center;
             border-bottom: 1.5px solid #e5e7eb;
-            padding-bottom: 6px;
-            margin-bottom: 8px;
-            letter-spacing: 0.2px;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            letter-spacing: 0.3px;
         }
 
-        /* Member details container - compact */
+        /* Member details */
         .member-details-section {
             margin: 4px 0;
         }
 
         .member-name-line {
-            font-size: 10pt;
+            font-size: 11pt;
             font-weight: 700;
             color: #111827;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-family: 'Arial', sans-serif;
             text-transform: uppercase;
         }
 
         .detail-row {
-            font-size: 7.5pt;
-            margin-bottom: 4px;
+            font-size: 8pt;
+            margin-bottom: 5px;
             color: #374151;
-            line-height: 1.3;
+            line-height: 1.35;
         }
 
         .detail-label {
@@ -166,27 +173,28 @@
             font-weight: 500;
         }
 
-        /* ========== BACK SIDE - Property notice and contact ONLY ========== */
+        /* ========== BACK SIDE - Property notice ========== */
         .back-property-container {
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 16px 14px;
         }
 
         .back-property-main {
-            font-size: 8pt;
+            font-size: 8.5pt;
             font-weight: 800;
             color: #1E3A8A;
             text-transform: uppercase;
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             letter-spacing: 0.5px;
         }
 
         .back-divider {
-            width: 40px;
+            width: 45px;
             height: 2px;
             background: #b8860b;
             margin: 6px auto;
@@ -195,20 +203,20 @@
         .back-contact-block {
             text-align: center;
             width: 100%;
-            margin: 6px 0;
+            margin: 8px 0;
         }
 
         .back-contact-line {
-            font-size: 6.5pt;
+            font-size: 7pt;
             color: #4b5563;
-            margin: 3px 0;
+            margin: 4px 0;
             line-height: 1.3;
         }
 
         .back-contact-line i {
-            margin-right: 3px;
-            color: #6b7280;
-            font-size: 6pt;
+            margin-right: 4px;
+            color: #1E3A8A;
+            font-size: 7pt;
         }
 
         .back-phone {
@@ -216,26 +224,17 @@
             color: #1E3A8A;
         }
 
-        .back-email {
-            font-weight: 500;
-        }
-
         .back-small-note {
-            font-size: 5.5pt;
+            font-size: 6pt;
             color: #6b7280;
-            margin-top: 6px;
-            padding-top: 5px;
+            margin-top: 8px;
+            padding-top: 6px;
             border-top: 1px solid #e5e7eb;
             width: 100%;
             text-align: center;
         }
 
-        /* Hide front property footer since it moved to back */
-        .property-footer-card {
-            display: none;
-        }
-
-        /* PRINT BUTTON - smaller */
+        /* PRINT BUTTON */
         .print-button-container {
             position: fixed;
             bottom: 20px;
@@ -247,7 +246,7 @@
         }
 
         .print-btn {
-            background: linear-gradient(135deg, #1E3A8A 0%, #0f2a6b 100%);
+            background: linear-gradient(135deg, #0B1E4E 0%, #1E3A8A 100%);
             color: white;
             border: none;
             padding: 8px 20px;
@@ -304,11 +303,12 @@
                 box-shadow: none;
                 margin: 0 auto;
                 width: 100%;
-                max-width: 260pt;
+                max-width: 270pt;
             }
 
             .print-id-card-front,
             .print-id-card-back {
+                box-shadow: none;
                 break-inside: avoid;
             }
         }
@@ -336,13 +336,13 @@
                 width: 95% !important;
             }
 
-            .university-logo {
+            .ribbon-logo {
                 width: 28px;
                 height: 28px;
             }
 
-            .university-title {
-                font-size: 10pt;
+            .ribbon-title {
+                font-size: 11pt;
             }
         }
     </style>
@@ -360,61 +360,60 @@
     </div>
 
     <div class="id-card-print-container">
-        <!-- ==================== FRONT SIDE - Member Info ONLY ==================== -->
+        <!-- ==================== FRONT SIDE - Dark Blue Ribbon Header ==================== -->
         <div class="print-front-page">
             <div class="print-id-card">
                 <div class="print-id-card-front">
-                    <!-- Header with Logo and University Name -->
-                    <div class="logo-header">
-                        {% if logo_exists and logo_exists == true %}
-                        <img src="{{ url_for('static', filename='images/logo.png') }}" class="university-logo"
-                            alt="ZCAS Logo"
-                            onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.fallback-logo-text').style.display='flex';">
-                        {% elif logo_path %}
-                        <img src="{{ logo_path }}" class="university-logo" alt="ZCAS Logo"
-                            onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.fallback-logo-text').style.display='flex';">
-                        {% else %}
-                        {% set alt_logo = url_for('static', filename='uploads/logo.png') %}
-                        <img src="{{ alt_logo }}" class="university-logo" alt="ZCAS Logo"
-                            onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.fallback-logo-text').style.display='flex';">
-                        {% endif %}
-                        <div class="fallback-logo-text" style="display: none;">ZCAS</div>
-                        <div class="university-title">ZCAS UNIVERSITY</div>
+                    <!-- Dark Blue Ribbon with Logo and University Name -->
+                    <div class="dark-blue-ribbon">
+                        <!-- Display logo with multiple fallback options -->
+                        <img src="/static/images/logo.png" class="ribbon-logo" alt="ZCAS Logo"
+                            onerror="this.onerror=null; this.src='/static/uploads/logo.png'; this.onerror=function(){ this.style.display='none'; document.getElementById('fallbackLogoIcon').style.display='flex'; }">
+
+                        <!-- Fallback icon if both logo paths fail -->
+                        <div id="fallbackLogoIcon" class="ribbon-fallback-logo" style="display: none;">
+                            <i class="fas fa-university" style="font-size: 18px; color: white;"></i>
+                        </div>
+
+                        <div class="ribbon-title">ZCAS UNIVERSITY</div>
                     </div>
 
-                    <!-- Member type line -->
-                    <div class="member-type-line">
-                        {% if member.member_type == 'student' %}
-                        STUDENT ID | FULL-TIME
-                        {% else %}
-                        EXTERNAL MEMBER ID
-                        {% endif %}
-                    </div>
+                    <!-- Content Area -->
+                    <div class="card-content">
+                        <!-- Member type line -->
+                        <div class="member-type-line">
+                            {% if member.member_type == 'student' %}
+                            STUDENT ID | FULL-TIME STUDENT
+                            {% else %}
+                            EXTERNAL MEMBER ID
+                            {% endif %}
+                        </div>
 
-                    <!-- Member Details only (no property footer) -->
-                    <div class="member-details-section">
-                        <div class="member-name-line">{{ member.full_name | upper }}</div>
-                        <div class="detail-row">
-                            <span class="detail-label">ID: </span>
-                            <span class="detail-value">{{ member.member_id }}</span>
+                        <!-- Member Details -->
+                        <div class="member-details-section">
+                            <div class="member-name-line">{{ member.full_name | upper }}</div>
+                            <div class="detail-row">
+                                <span class="detail-label">MEMBER ID: </span>
+                                <span class="detail-value">{{ member.member_id }}</span>
+                            </div>
+                            {% if member.member_type == 'student' and member.valid_until %}
+                            <div class="detail-row">
+                                <span class="detail-label">VALID UNTIL: </span>
+                                <span class="detail-value">{{ member.valid_until }}</span>
+                            </div>
+                            {% elif member.nrc_number %}
+                            <div class="detail-row">
+                                <span class="detail-label">NRC NUMBER: </span>
+                                <span class="detail-value">{{ member.nrc_number }}</span>
+                            </div>
+                            {% endif %}
                         </div>
-                        {% if member.member_type == 'student' and member.valid_until %}
-                        <div class="detail-row">
-                            <span class="detail-label">VALID UNTIL: </span>
-                            <span class="detail-value">{{ member.valid_until }}</span>
-                        </div>
-                        {% elif member.nrc_number %}
-                        <div class="detail-row">
-                            <span class="detail-label">NRC: </span>
-                            <span class="detail-value">{{ member.nrc_number }}</span>
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== BACK SIDE - Property notice and Contact ONLY ==================== -->
+        <!-- ==================== BACK SIDE - Property Notice & Contact ==================== -->
         <div class="print-back-page">
             <div class="print-id-card">
                 <div class="print-id-card-back">
@@ -436,11 +435,15 @@
                             </div>
                             <div class="back-contact-line">
                                 <i class="fas fa-map-marker-alt"></i> {{ contact_info.address if contact_info else 'ZCAS
-                                University Library, Lusaka' }}
+                                University Library, Lusaka, Zambia' }}
+                            </div>
+                            <div class="back-contact-line">
+                                <i class="fas fa-globe"></i> {{ contact_info.website if contact_info else
+                                'www.zcasu.edu.zm' }}
                             </div>
                         </div>
                         <div class="back-small-note">
-                            <i class="fas fa-shield-alt"></i> Report lost card immediately
+                            <i class="fas fa-shield-alt"></i> Report lost card immediately • Electronic verification
                         </div>
                     </div>
                 </div>
@@ -450,21 +453,38 @@
 
     <script>
         (function () {
-            // Logo fallback handler
-            setTimeout(function () {
-                const logos = document.querySelectorAll('.university-logo');
+            // Enhanced logo fallback handler
+            function ensureLogoDisplay() {
+                const logos = document.querySelectorAll('.ribbon-logo');
                 logos.forEach(logo => {
-                    if (logo.complete && (logo.naturalWidth === 0 || logo.naturalHeight === 0)) {
-                        logo.style.display = 'none';
-                        const fallback = logo.parentElement.querySelector('.fallback-logo-text');
-                        if (fallback) {
-                            fallback.style.display = 'flex';
+                    // Check if logo failed to load
+                    if (logo.complete) {
+                        if (logo.naturalWidth === 0 || logo.naturalHeight === 0) {
+                            logo.style.display = 'none';
+                            const fallback = document.getElementById('fallbackLogoIcon');
+                            if (fallback) {
+                                fallback.style.display = 'flex';
+                            }
                         }
+                    } else {
+                        logo.onerror = function () {
+                            this.style.display = 'none';
+                            const fallback = document.getElementById('fallbackLogoIcon');
+                            if (fallback) {
+                                fallback.style.display = 'flex';
+                            }
+                        };
                     }
                 });
-            }, 100);
+            }
 
-            // Remove any watermarks
+            // Run after a short delay to ensure images are processed
+            setTimeout(ensureLogoDisplay, 100);
+
+            // Also run when page fully loads
+            window.addEventListener('load', ensureLogoDisplay);
+
+            // Remove any watermarks (Replit, etc.)
             const cleanWatermarks = () => {
                 const allElements = document.querySelectorAll('*');
                 allElements.forEach(el => {
@@ -489,7 +509,7 @@
                 });
             };
             cleanWatermarks();
-            console.log("✅ ZCAS ID Card - Compact size, property notice on back. Ready for duplex printing.");
+            console.log("✅ ZCAS ID Card - Dark blue ribbon header, logo visible, no borders, no watermark. Ready for duplex printing.");
         })();
     </script>
 </body>
