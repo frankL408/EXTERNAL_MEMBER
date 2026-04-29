@@ -91,21 +91,33 @@
             min-height: 210px;
         }
 
-        /* Compact header */
+        /* Compact header — full university name */
         .custom-id-header {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            font-size: 16pt !important;
+            font-size: 13pt !important;
             font-weight: 800 !important;
             color: #FFF !important;
             background-color: #301934 !important;
-            padding: 4px 6px !important;
+            padding: 6px 6px !important;
             border-radius: 10px 10px 0 0;
             margin: -6px -6px 8px -6px;
             line-height: 1.2;
-            letter-spacing: -0.2px;
+            letter-spacing: 0px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* Responsive: if screen too small, allow wrap but keep full name */
+        @media (max-width: 380px) {
+            .custom-id-header {
+                font-size: 11pt !important;
+                white-space: normal;
+                text-align: center;
+                flex-wrap: wrap;
+            }
         }
 
         .header-logo {
@@ -277,7 +289,7 @@
             width: 100%;
         }
 
-        /* Print button remains accessible */
+        /* Print button remains accessible - NO WATERMARK, NO REPLIT MARK */
         .print-button {
             position: fixed;
             bottom: 22px;
@@ -337,6 +349,15 @@
             .print-id-card-back {
                 break-inside: avoid;
             }
+
+            /* Remove any potential hidden elements or watermarks if any */
+            body::before,
+            body::after,
+            .id-card-print-container::before,
+            .id-card-print-container::after {
+                display: none !important;
+                content: none !important;
+            }
         }
 
         /* small devices fallback */
@@ -347,7 +368,6 @@
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- No auto-print by default – user chooses via button, but we keep the option to print manually -->
 </head>
 
 <body>
@@ -363,13 +383,14 @@
                     <div class="custom-id-header">
                         <!-- Logo handling: dynamic paths with fallback for Jinja2 rendering -->
                         {% if logo_exists %}
-                        <img src="{{ url_for('static', filename='images/logo.png') }}" class="header-logo" alt="Logo"
-                            onerror="this.style.display='none'">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" class="header-logo"
+                            alt="University Logo" onerror="this.style.display='none'">
                         {% else %}
                         {% set alt_logo = url_for('static', filename='uploads/logo.png') %}
-                        <img src="{{ alt_logo }}" class="header-logo" alt="Logo" onerror="this.style.display='none'">
+                        <img src="{{ alt_logo }}" class="header-logo" alt="University Logo"
+                            onerror="this.style.display='none'">
                         {% endif %}
-                        ZCAS UNIV.
+                        ZCAS UNIVERSITY
                     </div>
                     <div class="id-photo-area">
                         <div class="photo-box">
@@ -433,11 +454,41 @@
     </div>
 
     <script>
-        // Optional: user can print manually; but we intentionally removed auto-print
-        // to respect user expectation. If you desire auto-dialog on load (uncomment)
-        // but for better UX, we keep only manual print button.
-        // However, adding a small hint: message when loading (no auto print)
-        console.log("ID card ready: front + back design fits on two printed pages when duplex printing.");
+        // Ensure no console messages or any hidden elements generate watermarks or external references
+        // This script only exists to keep print behavior clean.
+        // No Replit badge, no external watermark - clean ID print.
+        (function () {
+            // Additional safety: remove any potential Replit-related attributes or hidden iframes if present
+            // This ensures that nothing gets injected dynamically.
+            const removeReplitMarkers = () => {
+                // Remove any element that might contain "replit" or watermark-like classes
+                const allElements = document.querySelectorAll('*');
+                allElements.forEach(el => {
+                    // Check for any attribute that might reference replit badge
+                    if (el.className && typeof el.className === 'string') {
+                        if (el.className.toLowerCase().includes('replit') ||
+                            el.className.toLowerCase().includes('watermark') ||
+                            el.className.toLowerCase().includes('badge')) {
+                            if (el.style) el.style.display = 'none';
+                        }
+                    }
+                    if (el.id && typeof el.id === 'string') {
+                        if (el.id.toLowerCase().includes('replit') || el.id.toLowerCase().includes('watermark')) {
+                            if (el.style) el.style.display = 'none';
+                        }
+                    }
+                });
+                // Also look for any script tags that might be injected by environment (safety)
+            };
+            removeReplitMarkers();
+            // Also remove any iframe watermarks that could be present from external sources
+            const iframes = document.querySelectorAll('iframe');
+            iframes.forEach(iframe => {
+                if (iframe.src && (iframe.src.includes('replit') || iframe.src.includes('watermark'))) {
+                    iframe.remove();
+                }
+            });
+        })();
     </script>
 </body>
 
