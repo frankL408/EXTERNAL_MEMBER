@@ -3,64 +3,75 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print ID Card - {{ member.full_name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ZCAS University ID Card – Print Ready (2-Sides)</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            /* Force exact print colors */
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
         }
 
         body {
-            background: white;
+            background: #e5e7eb;
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
         }
 
+        /* PRINT CONTAINER: simulates two physical pages (front/back) */
         .id-card-print-container {
-            width: 100%;
-            margin: 0;
-            padding: 0;
+            max-width: 100%;
+            margin: 0 auto;
         }
 
+        /* Each "page" will be forced to fit on a separate sheet when printed (front + back) */
         .print-front-page,
         .print-back-page {
             page-break-after: always;
+            /* front and back on separate pages */
             page-break-inside: avoid;
+            break-inside: avoid;
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             background: white;
+            width: 100%;
         }
 
+        /* CARD BASE — dimension optimized for 2-sided printing on standard ID card size */
+        /* Dimensions reduced to fit front+back on one sheet without overflow, but still readable */
         .print-id-card {
-            width: 350pt !important;
+            width: 320pt !important;
+            /* ~112mm — typical ID width */
+            min-width: 260pt;
+            max-width: 340pt;
             background-color: #160a25 !important;
-            padding: 15px !important;
-            height: 250px !important;
-            break-inside: avoid !important;
-            display: flex;
-            flex-direction: column;
-            border-radius: 16px;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-            margin: 0 auto;
+            padding: 10px !important;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            margin: 12px auto;
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
 
+        /* unified front/back inner styles */
         .print-id-card-front,
         .print-id-card-back {
             width: 100%;
-            height: 100%;
             background: linear-gradient(145deg, #fef9f0 0%, #ffffff 100%);
-            border-radius: 14px;
-            padding: 12px 14px;
+            border-radius: 12px;
+            padding: 10px 12px;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -69,6 +80,7 @@
 
         .print-id-card-front {
             justify-content: space-between;
+            min-height: 210px;
         }
 
         .print-id-card-back {
@@ -76,49 +88,51 @@
             text-align: center;
             align-items: center;
             justify-content: center;
+            min-height: 210px;
         }
 
-        /* Header with logo */
+        /* Compact header */
         .custom-id-header {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            font-size: 19pt !important;
-            font-weight: bold !important;
+            gap: 8px;
+            font-size: 16pt !important;
+            font-weight: 800 !important;
             color: #FFF !important;
-            text-align: center !important;
-            font-family: arial, sans-serif !important;
             background-color: #301934 !important;
-            padding: 2pt !important;
-            border-radius: 12px 12px 0 0;
-            margin: -4px -4px 12px -4px;
+            padding: 4px 6px !important;
+            border-radius: 10px 10px 0 0;
+            margin: -6px -6px 8px -6px;
             line-height: 1.2;
+            letter-spacing: -0.2px;
         }
 
         .header-logo {
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             object-fit: contain;
         }
 
+        /* ID photo area: tight spacing */
         .id-photo-area {
             display: flex;
-            gap: 14px;
-            margin: 6px 6px 8px 6px;
+            gap: 10px;
+            margin: 4px 2px 6px 2px;
             align-items: center;
         }
 
         .photo-box {
-            width: 85px;
-            height: 85px;
+            width: 70px;
+            height: 70px;
             background: #f2eef5;
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #e9d7f0;
+            border: 2px solid #e2d0f0;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .photo-box img {
@@ -132,98 +146,108 @@
         }
 
         .member-name {
-            font-size: 13pt;
+            font-size: 11.5pt;
             font-weight: 800;
             font-family: 'Arial', sans-serif;
             color: #160a25;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            line-height: 1.2;
         }
 
         .member-id-text {
-            font-size: 9pt;
+            font-size: 8pt;
             color: #4a3b5e;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .nrc-chip {
             background: #ede7f6;
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 20px;
-            font-size: 8pt;
+            padding: 2px 6px;
+            border-radius: 18px;
+            font-size: 7.5pt;
             font-weight: 700;
             font-family: monospace;
             color: #301934;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
         .library-badge {
             text-align: center;
-            margin-top: auto;
-            padding-top: 6px;
+            margin-top: 4px;
+            margin-bottom: 2px;
         }
 
         .library-badge span {
-            font-size: 7pt;
+            font-size: 6.5pt;
             color: #5c4680;
             background: #f4edfc;
-            padding: 3px 10px;
-            border-radius: 20px;
+            padding: 2px 6px;
+            border-radius: 16px;
+            font-weight: 600;
         }
 
         .footer-note {
             text-align: center;
-            font-size: 6pt;
+            font-size: 5.5pt;
             font-style: italic;
             color: #6c5b7b;
             border-top: 1px dashed #ddcee8;
-            padding-top: 6px;
-            margin-top: 5px;
+            padding-top: 5px;
+            margin-top: 3px;
         }
 
-        /* Property notice styling - prominent on back */
+        /* Back side condensed – Property notice prominent but compact */
         .back-property-notice {
-            font-size: 11pt;
+            font-size: 9pt;
             font-weight: 900;
             color: #301934;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
-            padding: 8px 12px;
+            background: #f3e8ff;
+            padding: 4px 6px;
             border-radius: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             width: 100%;
             text-align: center;
             border: 1px solid #c084fc;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.3px;
+        }
+
+        .back-property-notice i {
+            font-size: 9pt;
         }
 
         .property-text {
             background: #efdffb;
-            padding: 6px 14px;
-            border-radius: 30px;
+            padding: 3px 10px;
+            border-radius: 28px;
             font-weight: 800;
             color: #301934;
-            font-size: 10pt;
+            font-size: 8pt;
             display: inline-block;
+            margin-bottom: 4px;
         }
 
         .separator-line {
-            width: 65px;
+            width: 45px;
             height: 2px;
             background: #B8860B;
-            margin: 10px auto;
+            margin: 6px auto;
         }
 
         .contact-details {
-            margin: 8px 0;
+            margin: 4px 0;
+            text-align: left;
+            width: 100%;
+            font-size: 0.65rem;
         }
 
         .contact-item {
-            margin-bottom: 8px;
-            font-size: 0.68rem;
-            line-height: 1.3;
+            margin-bottom: 4px;
+            font-size: 0.65rem;
+            line-height: 1.25;
             color: #1f1a2e;
+            word-break: break-word;
         }
 
         .contact-label {
@@ -234,28 +258,30 @@
         .scan-instruction {
             background: #30193418;
             font-weight: bold;
-            border-radius: 50px;
-            padding: 5px 12px;
+            border-radius: 40px;
+            padding: 3px 10px;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             font-size: 0.6rem;
             color: #301934;
+            margin-top: 4px;
         }
 
         .important-note {
-            font-size: 7pt;
-            margin-top: 10px;
+            font-size: 6pt;
+            margin-top: 6px;
             color: #5c4b6e;
             border-top: 1px solid #decdf0;
-            padding-top: 8px;
+            padding-top: 6px;
             width: 100%;
         }
 
+        /* Print button remains accessible */
         .print-button {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 22px;
+            right: 22px;
             z-index: 1000;
         }
 
@@ -263,17 +289,22 @@
             background: #301934;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 10px 20px;
+            border-radius: 32px;
+            font-size: 15px;
+            font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            transition: 0.2s;
+            font-family: inherit;
         }
 
         .print-button button:hover {
-            background: #1e0f24;
+            background: #1f0f28;
+            transform: scale(1.02);
         }
 
+        /* PRINT specific adjustments — guarantee two separate pages (front & back) */
         @media print {
             body {
                 margin: 0;
@@ -284,23 +315,53 @@
             .print-button {
                 display: none;
             }
+
+            .print-front-page,
+            .print-back-page {
+                margin: 0;
+                padding: 0;
+                break-inside: avoid;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+
+            .print-id-card {
+                box-shadow: none;
+                margin: 0 auto;
+                width: 100%;
+                max-width: 320pt;
+            }
+
+            /* Ensure card content does not break awkwardly */
+            .print-id-card-front,
+            .print-id-card-back {
+                break-inside: avoid;
+            }
+        }
+
+        /* small devices fallback */
+        @media (max-width: 400px) {
+            .print-id-card {
+                width: 95% !important;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- No auto-print by default – user chooses via button, but we keep the option to print manually -->
 </head>
 
 <body>
     <div class="print-button">
-        <button onclick="window.print();"><i class="fas fa-print"></i> Print ID Card</button>
+        <button onclick="window.print();"><i class="fas fa-print"></i> Print ID Card (2-sided)</button>
     </div>
 
     <div class="id-card-print-container">
-        <!-- FRONT SIDE -->
+        <!-- ======================== FRONT SIDE ======================== -->
         <div class="print-front-page">
             <div class="print-id-card">
                 <div class="print-id-card-front">
                     <div class="custom-id-header">
-                        <!-- Check common logo locations -->
+                        <!-- Logo handling: dynamic paths with fallback for Jinja2 rendering -->
                         {% if logo_exists %}
                         <img src="{{ url_for('static', filename='images/logo.png') }}" class="header-logo" alt="Logo"
                             onerror="this.style.display='none'">
@@ -308,22 +369,22 @@
                         {% set alt_logo = url_for('static', filename='uploads/logo.png') %}
                         <img src="{{ alt_logo }}" class="header-logo" alt="Logo" onerror="this.style.display='none'">
                         {% endif %}
-
-                        ZCAS UNIVERSITY
+                        ZCAS UNIV.
                     </div>
                     <div class="id-photo-area">
                         <div class="photo-box">
                             {% if member.photo_path %}
-                            <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}" alt="Photo">
+                            <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
+                                alt="Member Photo">
                             {% else %}
-                            <i class="fas fa-camera fa-2x" style="color:#b6a2d6;"></i>
+                            <i class="fas fa-id-card fa-2x" style="color:#b6a2d6;"></i>
                             {% endif %}
                         </div>
                         <div class="member-details">
                             <div class="member-name">{{ member.full_name }}</div>
-                            <div class="member-id-text">ID: {{ member.member_id }}</div>
+                            <div class="member-id-text"><strong>ID:</strong> {{ member.member_id }}</div>
                             <div class="nrc-chip">
-                                📘 NRC: {{ member.nrc_number if member.nrc_number else 'Not provided' }}
+                                📘 NRC: {{ member.nrc_number if member.nrc_number else 'N/A' }}
                             </div>
                         </div>
                     </div>
@@ -337,36 +398,34 @@
             </div>
         </div>
 
-        <!-- BACK SIDE -->
+        <!-- ======================== BACK SIDE ======================== -->
         <div class="print-back-page">
             <div class="print-id-card">
                 <div class="print-id-card-back">
-                    <!-- PROMINENT PROPERTY NOTICE - Added as requested -->
+                    <!-- PROPERTY NOTICE (prominent, reduced to fit) -->
                     <div class="back-property-notice">
-                        <i class="fas fa-gavel"></i> THIS CARD IS PROPERTY OF ZCAS UNIVERSITY <i
-                            class="fas fa-gavel"></i>
+                        <i class="fas fa-gavel"></i> PROPERTY OF ZCAS UNIVERSITY <i class="fas fa-gavel"></i>
                     </div>
 
                     <div class="property-text">
-                        🏛️ PROPERTY OF ZCAS UNIVERSITY
+                        🏛️ OFFICIAL UNIVERSITY CARD
                     </div>
                     <div class="separator-line"></div>
                     <div class="contact-details">
-                        <div class="contact-item"><span class="contact-label">📞 IF FOUND CONTACT:</span><br>{{
-                            contact_info.phone if contact_info else '+260211222508' }}</div>
-                        <div class="contact-item"><span class="contact-label">✉️ Email:</span><br>{{ contact_info.email
-                            if contact_info else 'library@zcasu.edu.zm' }}</div>
-                        <div class="contact-item"><span class="contact-label">📍 Address:</span><br>{{
-                            contact_info.address if contact_info else 'ZCAS University Library, Lusaka, Zambia' }}</div>
-                        <div class="contact-item"><span class="contact-label">🌐 Website:</span><br>{{
-                            contact_info.website if contact_info else 'www.zcasu.edu.zm' }}</div>
+                        <div class="contact-item"><span class="contact-label">📞 IF FOUND:</span> {{ contact_info.phone
+                            if contact_info else '+260211222508' }}</div>
+                        <div class="contact-item"><span class="contact-label">✉️ Email:</span> {{ contact_info.email if
+                            contact_info else 'library@zcasu.edu.zm' }}</div>
+                        <div class="contact-item"><span class="contact-label">📍 Address:</span> {{ contact_info.address
+                            if contact_info else 'ZCAS University Library, Lusaka' }}</div>
+                        <div class="contact-item"><span class="contact-label">🌐 Web:</span> {{ contact_info.website if
+                            contact_info else 'www.zcasu.edu.zm' }}</div>
                     </div>
                     <div class="scan-instruction">
                         <i class="fas fa-qrcode"></i> SCAN AT GATE FOR ACCESS
                     </div>
                     <div class="important-note">
-                        <i class="fas fa-shield-alt"></i> Report lost card immediately | Membership verified
-                        electronically
+                        <i class="fas fa-shield-alt"></i> Report lost card immediately ● Member verified electronically
                     </div>
                 </div>
             </div>
@@ -374,12 +433,11 @@
     </div>
 
     <script>
-        // Auto-trigger print dialog when page loads
-        window.onload = function () {
-            setTimeout(function () {
-                window.print();
-            }, 500);
-        };
+        // Optional: user can print manually; but we intentionally removed auto-print
+        // to respect user expectation. If you desire auto-dialog on load (uncomment)
+        // but for better UX, we keep only manual print button.
+        // However, adding a small hint: message when loading (no auto print)
+        console.log("ID card ready: front + back design fits on two printed pages when duplex printing.");
     </script>
 </body>
 
