@@ -1,294 +1,146 @@
 {% extends "base.html" %}
 
-{% block title %}View Members{% endblock %}
+{% block title %}Members - ZCAS University Library{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Library Members</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{{ url_for('auto_check_expiry') }}" class="btn btn-sm btn-outline-warning me-2">
-            Check Expiry
-        </a>
-        <a href="{{ url_for('membership_calendar') }}" class="btn btn-sm btn-outline-info me-2">
-            View Calendar
-        </a>
-        <a href="{{ url_for('register_member') }}" class="btn btn-sm btn-primary">
-            Register New Member
-        </a>
-    </div>
-</div>
-
-<!-- Bulk Actions -->
-<div class="row mb-3">
-    <div class="col-md-12">
-        <div class="btn-group">
-            <button type="button" class="btn btn-outline-primary" id="selectAllBtn">
-                <i class="fas fa-check-square"></i> Select All
-            </button>
-            <button type="submit" class="btn btn-outline-success" form="bulkRenewForm">
-                <i class="fas fa-calendar-plus"></i> Renew Selected
-            </button>
-            <button type="button" class="btn btn-outline-danger" id="bulkDeleteBtn">
-                <i class="fas fa-trash"></i> Delete Selected
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Bulk Operations Forms -->
-<form id="bulkRenewForm" method="POST" action="{{ url_for('bulk_renew') }}">
-    <!-- Checkboxes will be added here by JavaScript -->
-</form>
-
-<form id="bulkDeleteForm" method="POST" action="{{ url_for('bulk_delete') }}" style="display: none;">
-    <!-- Checkboxes will be added here by JavaScript -->
-</form>
-
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th width="50">
-                            <input type="checkbox" id="selectAll" class="form-check-input">
-                        </th>
-                        <th>Member ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Membership Type</th>
-                        <th>Registration Date</th>
-                        <th>Expiry Date</th>
-                        <th>Days Left</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for member in members %}
-                    <tr>
-                        <td>
-                            <input type="checkbox" name="member_ids" value="{{ member.id }}"
-                                class="form-check-input member-checkbox">
-                        </td>
-                        <td>{{ member.member_id }}</td>
-                        <td>{{ member.full_name }}</td>
-                        <td>{{ member.email }}</td>
-                        <td>{{ member.phone }}</td>
-                        <td>
-                            {% if member.membership_type == 'monthly' %}
-                            Monthly (K90)
-                            {% else %}
-                            Six Months (K500)
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if member.registration_date %}
-                            {{ member.registration_date.strftime('%Y-%m-%d') }}
-                            {% else %}
-                            N/A
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if member.expiry_date %}
-                            {{ member.expiry_date.strftime('%Y-%m-%d') }}
-                            {% else %}
-                            N/A
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if member.expiry_date %}
-                            {# Convert both dates to date objects for comparison #}
-                            {% set expiry_date = member.expiry_date.date() if member.expiry_date.__class__.__name__
-                            == 'datetime' else member.expiry_date %}
-                            {% set today = now.date() %}
-                            {% set days_left = (expiry_date - today).days %}
-                            {% if days_left > 0 %}
-                            <span class="badge bg-success">{{ days_left }} days</span>
-                            {% elif days_left == 0 %}
-                            <span class="badge bg-warning">Today</span>
-                            {% else %}
-                            <span class="badge bg-danger">Expired</span>
-                            {% endif %}
-                            {% else %}
-                            <span class="badge bg-secondary">N/A</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if member.status == 'active' %}
-                            <span class="badge bg-success">Active</span>
-                            {% else %}
-                            <span class="badge bg-danger">Expired</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ url_for('print_id', member_id=member.id) }}" class="btn btn-outline-primary"
-                                    title="Print ID Card">
-                                    <i class="fas fa-id-card"></i> ID
-                                </a>
-                                <a href="{{ url_for('view_receipt', member_id=member.id) }}"
-                                    class="btn btn-outline-info" title="View Receipt">
-                                    <i class="fas fa-receipt"></i> View
-                                </a>
-                                <a href="{{ url_for('member_details', member_id=member.id) }}"
-                                    class="btn btn-outline-secondary" title="Member Details">
-                                    <i class="fas fa-eye"></i> Details
-                                </a>
-                                <a href="{{ url_for('renew_member', member_id=member.id) }}"
-                                    class="btn btn-outline-warning" title="Renew Membership">
-                                    <i class="fas fa-sync-alt"></i> Renew
-                                </a>
-                                <!-- Delete Button -->
-                                <form method="POST" action="{{ url_for('delete_member', member_id=member.id) }}"
-                                    style="display: inline;">
-                                    <button type="submit" class="btn btn-outline-danger" title="Delete Member"
-                                        onclick="return confirm('Are you sure you want to delete {{ member.full_name }}? This action cannot be undone!')">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                </form>
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-users"></i> Library Members</h4>
+                    <a href="{{ url_for('register_member') }}" class="btn btn-light">
+                        <i class="fas fa-user-plus"></i> Register New Member
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 text-center">
+                                <h5>Total Members</h5>
+                                <h2 class="text-primary">{{ members|length }}</h2>
                             </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="11" class="text-center text-muted py-4">
-                            <i class="fas fa-users fa-2x mb-3"></i>
-                            <p>No members found. <a href="{{ url_for('register_member') }}">Register the first
-                                    member</a></p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 text-center">
+                                <h5>Active Members</h5>
+                                <h2 class="text-success">{{ members|selectattr('status', 'equalto',
+                                    'active')|list|length }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 text-center">
+                                <h5>Expired Members</h5>
+                                <h2 class="text-danger">{{ members|selectattr('status', 'equalto',
+                                    'expired')|list|length }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 text-center">
+                                <h5>RFID Assigned</h5>
+                                <h2 class="text-info">{{ members|selectattr('rfid_uid',
+                                    'defined')|selectattr('rfid_uid', 'ne', None)|list|length }}</h2>
+                            </div>
+                        </div>
+                    </div>
 
-<!-- Statistics Cards -->
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title">{{ members|length }}</h5>
-                <p class="card-text">Total Members</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">{{ active_members_count }}</h5>
-                <p class="card-text">Active Members</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-body">
-                <h5 class="card-title">{{ expiring_soon_count }}</h5>
-                <p class="card-text">Expiring Soon</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
-            <div class="card-body">
-                <h5 class="card-title">{{ expired_members_count }}</h5>
-                <p class="card-text">Expired Members</p>
+                    <!-- Search -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="text" id="searchInput" class="form-control"
+                                placeholder="Search by name, ID, or NRC...">
+                        </div>
+                        <div class="col-md-3">
+                            <select id="statusFilter" class="form-select">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Members Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="membersTable">
+                            <thead>
+                                <tr>
+                                    <th>Member ID</th>
+                                    <th>Full Name</th>
+                                    <th>NRC Number</th>
+                                    <th>Membership Type</th>
+                                    <th>Expiry Date</th>
+                                    <th>Status</th>
+                                    <th>RFID</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member in members %}
+                                <tr class="member-row" data-status="{{ member.status }}">
+                                    <td><strong>{{ member.member_id }}</strong></td>
+                                    <td>{{ member.full_name }}</td>
+                                    <td>{{ member.nrc_number }}</td>
+                                    <td>{{ member.membership_type|upper }}</td>
+                                    <td>{{ member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else 'N/A' }}
+                                    </td>
+                                    <td>
+                                        {% if member.status == 'active' %}
+                                        <span class="badge bg-success">ACTIVE</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">EXPIRED</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if member.rfid_uid %}
+                                        <span class="badge bg-info">Assigned</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Not Assigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('member_details', member_id=member.id) }}"
+                                            class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Select all checkbox functionality
-        const selectAll = document.getElementById('selectAll');
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-        const memberCheckboxes = document.querySelectorAll('.member-checkbox');
-        const bulkRenewForm = document.getElementById('bulkRenewForm');
-        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+    function filterMembers() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const rows = document.querySelectorAll('.member-row');
 
-        // Select All checkbox functionality
-        if (selectAll) {
-            selectAll.addEventListener('change', function () {
-                memberCheckboxes.forEach(checkbox => {
-                    checkbox.checked = selectAll.checked;
-                });
-                updateBulkRenewForm();
-            });
+        rows.forEach(row => {
+            let show = true;
+            const text = row.innerText.toLowerCase();
 
-            // Update select all when individual checkboxes change
-            memberCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function () {
-                    const allChecked = Array.from(memberCheckboxes).every(cb => cb.checked);
-                    selectAll.checked = allChecked;
-                    updateBulkRenewForm();
-                });
-            });
-        }
+            if (searchTerm && !text.includes(searchTerm)) {
+                show = false;
+            }
 
-        // Select All button functionality
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', function () {
-                const isChecked = !selectAll.checked;
-                selectAll.checked = isChecked;
-                memberCheckboxes.forEach(checkbox => {
-                    checkbox.checked = isChecked;
-                });
-                updateBulkRenewForm();
-            });
-        }
-
-        // Bulk Delete button functionality
-        if (bulkDeleteBtn) {
-            bulkDeleteBtn.addEventListener('click', function () {
-                const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
-                if (selectedMembers.length === 0) {
-                    alert('Please select at least one member to delete.');
-                    return;
+            if (statusFilter !== 'all') {
+                const status = row.getAttribute('data-status');
+                if (status !== statusFilter) {
+                    show = false;
                 }
+            }
 
-                if (confirm(`Are you sure you want to delete ${selectedMembers.length} member(s)? This action cannot be undone!`)) {
-                    // Clear any existing inputs
-                    bulkDeleteForm.innerHTML = '';
+            row.style.display = show ? '' : 'none';
+        });
+    }
 
-                    // Add selected member IDs
-                    selectedMembers.forEach(checkbox => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'member_ids';
-                        input.value = checkbox.value;
-                        bulkDeleteForm.appendChild(input);
-                    });
-
-                    bulkDeleteForm.submit();
-                }
-            });
-        }
-
-        // Update bulk renew form with selected checkboxes
-        function updateBulkRenewForm() {
-            // Clear existing inputs
-            bulkRenewForm.innerHTML = '';
-
-            // Add selected member IDs
-            memberCheckboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'member_ids';
-                    input.value = checkbox.value;
-                    bulkRenewForm.appendChild(input);
-                }
-            });
-        }
-
-        // Initialize the bulk renew form
-        updateBulkRenewForm();
-    });
+    document.getElementById('searchInput').addEventListener('keyup', filterMembers);
+    document.getElementById('statusFilter').addEventListener('change', filterMembers);
 </script>
 {% endblock %}
