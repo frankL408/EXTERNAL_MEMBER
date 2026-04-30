@@ -3,783 +3,576 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFID Scanner - ZCAS University Library</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Library Access Terminal | ZCAS University</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #1E3A8A 0%, #2D4BA8 100%);
+            background: linear-gradient(145deg, #0F2B4F 0%, #1E3A8A 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 1.5rem;
+            font-family: 'Inter', system-ui, 'Segoe UI', sans-serif;
         }
 
-        .scanner-container {
-            max-width: 850px;
+        .terminal-container {
+            max-width: 1300px;
             margin: 0 auto;
         }
 
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            border: none;
-        }
-
-        .card-header {
-            border-radius: 15px 15px 0 0 !important;
-            border: none;
-        }
-
-        .status-card {
-            transition: all 0.3s ease;
-        }
-
-        .status-check-in {
-            border-left: 4px solid #10B981;
-            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
-        }
-
-        .status-check-out {
-            border-left: 4px solid #F59E0B;
-            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-        }
-
-        .status-expired {
-            border-left: 4px solid #EF4444;
-            background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
-        }
-
-        .member-photo {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 3px solid #1E3A8A;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            background: white;
-        }
-
-        .member-info {
-            animation: slideIn 0.5s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .scan-input {
-            font-family: 'Courier New', monospace;
-            font-size: 22px;
-            text-align: center;
-            letter-spacing: 2px;
-            font-weight: bold;
-        }
-
-        .rfid-icon {
-            font-size: 50px;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                opacity: 0.6;
-                transform: scale(1);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.1);
-            }
-
-            100% {
-                opacity: 0.6;
-                transform: scale(1);
-            }
-        }
-
-        .badge-expired {
-            background-color: #EF4444;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .badge-check-in {
-            background-color: #10B981;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .badge-check-out {
-            background-color: #F59E0B;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .current-members-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .member-item {
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .member-item:hover {
-            background-color: #f8f9fa;
-            transform: translateX(5px);
-        }
-
-        .member-avatar {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-
-        .mode-selector {
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .mode-selector.active {
-            background-color: #1E3A8A;
-            color: white;
-        }
-
-        .mode-selector:not(.active):hover {
-            background-color: #e9ecef;
-        }
-
-        .btn-primary-custom {
-            background: #1E3A8A;
-            border: none;
-            border-radius: 40px;
-            padding: 0.5rem 1.5rem;
-            font-weight: 500;
+        /* Entrance Scan Card */
+        .scan-hero {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 48px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 2rem;
             transition: 0.2s;
         }
 
-        .btn-primary-custom:hover {
+        .scan-header {
+            background: linear-gradient(135deg, #0F2B6D, #1E3A8A);
+            padding: 1.5rem;
+            text-align: center;
+            color: white;
+        }
+
+        .rfid-icon-big {
+            font-size: 3.8rem;
+            background: white;
+            width: 90px;
+            height: 90px;
+            line-height: 90px;
+            border-radius: 60px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: #1E3A8A;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .scan-input-xl {
+            border-radius: 60px;
+            padding: 15px 24px;
+            font-size: 1.2rem;
+            font-family: monospace;
+            text-align: center;
+            letter-spacing: 1px;
+            background: #fefce8;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-entrance {
+            background: #1E3A8A;
+            border: none;
+            border-radius: 60px;
+            padding: 12px 28px;
+            font-weight: 600;
+            transition: 0.2s;
+            width: 100%;
+            color: white;
+        }
+
+        .btn-entrance:hover {
             background: #0f2b6d;
-            transform: translateY(-1px);
+            transform: scale(0.98);
+        }
+
+        /* Live status badge */
+        .member-photo-sm {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #FFC107;
+        }
+
+        .active-badge {
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+        }
+
+        /* dropdown logs section */
+        .logs-dropdown-card {
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .dropdown-header-custom {
+            background: #f8fafd;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e9edf2;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .dropdown-header-custom:hover {
+            background: #f1f5f9;
+        }
+
+        .logs-panel {
+            transition: all 0.25s ease;
+        }
+
+        .filter-bar-mini {
+            background: #ffffff;
+            border-bottom: 1px solid #edf2f7;
+            padding: 1rem 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .logs-table-wrapper {
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .table-logs-mini {
+            width: 100%;
+            font-size: 0.85rem;
+        }
+
+        .table-logs-mini th {
+            background: #f9fbfd;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+
+        .badge-log-status {
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-check-in-mini {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-check-out-mini {
+            background: #ffedd5;
+            color: #9b4a0b;
+        }
+
+        .summary-stats-mini {
+            background: #f1f5f9;
+            padding: 0.7rem 1.5rem;
+            border-radius: 40px;
+            display: inline-flex;
+            gap: 1rem;
+        }
+
+        .toggle-icon {
+            transition: transform 0.2s;
+        }
+
+        .rotate-icon {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 700px) {
+            .filter-bar-mini {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container scanner-container">
-        <!-- Mode Selector -->
-        <div class="card mb-3">
-            <div class="card-body p-2">
-                <div class="d-flex text-center">
-                    <div class="flex-fill mode-selector p-2 rounded" id="modeAccess" onclick="setMode('access')">
-                        <i class="fas fa-door-open fa-2x"></i>
-                        <div class="fw-bold">Access Mode</div>
-                        <small>Check-in/out members</small>
+    <div class="terminal-container">
+        <!-- ENTRANCE SCANNER SECTION (CORE) -->
+        <div class="scan-hero">
+            <div class="scan-header">
+                <div class="rfid-icon-big mx-auto">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <h3 class="fw-bold mb-1">Library Entrance · External Access</h3>
+                <p class="mb-0 opacity-75">Tap or type External ID / RFID card</p>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold"><i class="fas fa-microchip me-1"></i> Scan / Enter Member ID
+                        or RFID</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fas fa-rss text-primary"></i></span>
+                        <input type="text" class="form-control scan-input-xl" id="scanExternalId"
+                            placeholder="e.g., EXT2025001 or tap RFID card" autofocus>
                     </div>
-                    <div class="flex-fill mode-selector p-2 rounded" id="modeAssign" onclick="setMode('assign')">
-                        <i class="fas fa-microchip fa-2x"></i>
-                        <div class="fw-bold">Assign Mode</div>
-                        <small>Assign RFID to members</small>
-                    </div>
+                    <div class="form-text mt-1"><i class="fas fa-info-circle"></i> Position cursor here → tap card or
+                        type ID</div>
+                </div>
+                <div class="d-grid gap-2 d-md-flex">
+                    <button class="btn btn-entrance" id="processScanBtn"><i class="fas fa-fingerprint me-2"></i> Process
+                        Entry / Exit</button>
+                    <button class="btn btn-outline-secondary rounded-pill px-4" id="clearScanBtn"><i
+                            class="fas fa-eraser"></i> Clear</button>
+                </div>
+                <!-- Result panel (dynamic) -->
+                <div id="scanResultArea" class="mt-3" style="display: none;"></div>
+                <div class="alert alert-light mt-3 small rounded-4">
+                    <i class="fas fa-door-open text-success"></i> <strong>Auto check-in/out:</strong> First scan = Check
+                    In | Second scan = Check Out
                 </div>
             </div>
         </div>
 
-        <!-- Scan Card -->
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0"><i class="fas fa-rss"></i> RFID Card Scanner</h4>
-                <small id="modeDescription">Tap RFID card for instant check-in/out</small>
+        <!-- DROPDOWN / COLLAPSIBLE LOGS SECTION with advanced filters and summary -->
+        <div class="logs-dropdown-card">
+            <div class="dropdown-header-custom d-flex justify-content-between align-items-center"
+                id="logsDropdownToggle">
+                <div>
+                    <i class="fas fa-history me-2 text-primary"></i>
+                    <span class="fw-semibold">📋 Access Log History</span>
+                    <span class="badge bg-secondary ms-2" id="logsCountBadge">0</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="summary-stats-mini d-none d-sm-flex">
+                        <span><i class="fas fa-database"></i> <span id="dropdownTotalLogs">0</span></span>
+                        <span class="text-success"><i class="fas fa-sign-in-alt"></i> <span
+                                id="dropdownCheckIns">0</span></span>
+                        <span class="text-warning"><i class="fas fa-sign-out-alt"></i> <span
+                                id="dropdownCheckOuts">0</span></span>
+                    </span>
+                    <i class="fas fa-chevron-down toggle-icon" id="toggleIcon"></i>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="text-center mb-3">
-                    <i class="fas fa-rss rfid-icon text-primary"></i>
-                </div>
-
-                <!-- Scan Input -->
-                <div class="mb-4">
-                    <label class="form-label fw-bold" id="inputLabel">
-                        <i class="fas fa-microchip"></i> Scan RFID Card / Member ID:
-                    </label>
-                    <input type="text" class="form-control scan-input" id="scanInput"
-                        placeholder="Tap RFID card or type Member ID..." autofocus>
-                    <small class="text-muted" id="inputHint">
-                        <i class="fas fa-info-circle"></i> Position cursor here and tap the RFID card on reader
-                    </small>
-                </div>
-
-                <!-- Search Member Section (for Assign Mode) -->
-                <div id="searchMemberSection" style="display: none;">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" id="memberSearchInput"
-                            placeholder="Search member by name, ID or NRC...">
-                        <button class="btn btn-outline-secondary" type="button" onclick="searchMember()">
-                            Search
-                        </button>
+            <div id="logsCollapsiblePanel" style="display: none;">
+                <!-- filter row inside dropdown -->
+                <div class="filter-bar-mini">
+                    <div style="min-width: 120px;">
+                        <label class="small fw-semibold">Status</label>
+                        <select class="form-select form-select-sm" id="filterStatusDropdown">
+                            <option value="all">All</option>
+                            <option value="check_in">Check In</option>
+                            <option value="check_out">Check Out</option>
+                        </select>
                     </div>
-                    <div id="searchResults" style="display: none;"></div>
-                </div>
-
-                <!-- Result display area -->
-                <div id="resultArea" style="display: none;"></div>
-
-                <!-- Instructions -->
-                <div class="alert alert-info mt-3" id="instructions">
-                    <strong><i class="fas fa-info-circle"></i> Access Mode Instructions:</strong>
-                    <ul class="mb-0 mt-2">
-                        <li>Connect USB RFID reader to your computer</li>
-                        <li>Position cursor in the scan field above</li>
-                        <li>Tap RFID card on the reader</li>
-                        <li>System automatically checks member IN or OUT</li>
-                        <li>First tap = Check In | Second tap = Check Out</li>
-                    </ul>
-                </div>
-
-                <!-- Quick actions -->
-                <div class="mt-3 text-center">
-                    <button class="btn btn-secondary btn-sm" onclick="clearScan()">
-                        <i class="fas fa-eraser"></i> Clear
-                    </button>
-                    <a href="{{ url_for('access_logs') }}" class="btn btn-info btn-sm" target="_blank">
-                        <i class="fas fa-history"></i> View Logs
-                    </a>
-                    <a href="{{ url_for('dashboard') }}" class="btn btn-success btn-sm">
-                        <i class="fas fa-tachometer-alt"></i> Dashboard
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Current Members in Library -->
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h6 class="mb-0"><i class="fas fa-users"></i> Currently in Library</h6>
-            </div>
-            <div class="card-body p-0">
-                <div id="currentMembersList" class="current-members-list">
-                    <div class="text-center p-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Loading current members...</p>
+                    <div style="min-width: 150px;">
+                        <label class="small fw-semibold">Member</label>
+                        <input type="text" class="form-control form-control-sm" id="filterUserDropdown"
+                            placeholder="Name or ID">
                     </div>
+                    <div style="min-width: 130px;">
+                        <label class="small fw-semibold">Card ID</label>
+                        <input type="text" class="form-control form-control-sm" id="filterCardDropdown"
+                            placeholder="RFID">
+                    </div>
+                    <div style="min-width: 130px;">
+                        <label class="small fw-semibold">From</label>
+                        <input type="date" class="form-control form-control-sm" id="filterDateFromDropdown">
+                    </div>
+                    <div style="min-width: 130px;">
+                        <label class="small fw-semibold">To</label>
+                        <input type="date" class="form-control form-control-sm" id="filterDateToDropdown">
+                    </div>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-primary rounded-pill px-3" id="applyLogsFilterBtn"><i
+                                class="fas fa-filter"></i> Apply</button>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" id="clearLogsFilterBtn"><i
+                                class="fas fa-undo"></i> Clear</button>
+                    </div>
+                </div>
+                <!-- logs table area -->
+                <div class="logs-table-wrapper">
+                    <table class="table table-sm table-logs-mini mb-0">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Member</th>
+                                <th>Card ID</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsDropdownBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Loading history...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-2 bg-light small px-3">
+                    <span id="logsInfoText">0 records</span>
+                    <div id="paginationDropdown" class="d-flex gap-1"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let currentMode = 'access'; // 'access' or 'assign'
-        let scanTimeout;
-        let selectedMemberId = null;
-        let audioContext = null;
+        // -------------------- GLOBAL STATE --------------------
+        let audioCtx = null;
+        let currentLogsData = [];
+        let currentLogsPage = 1;
+        let totalLogPages = 1;
+        let currentFilters = { status: 'all', user: '', card_id: '', date_from: '', date_to: '' };
 
-        // Initialize Audio Context
+        // Helper: audio feedback
         function initAudio() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioCtx && window.AudioContext) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        function playBeep(type) {
+            try {
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                if (type === 'check_in') { osc.frequency.value = 880; gain.gain.value = 0.25; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35); osc.stop(audioCtx.currentTime + 0.35); }
+                else if (type === 'check_out') { osc.frequency.value = 660; gain.gain.value = 0.25; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4); osc.stop(audioCtx.currentTime + 0.4); }
+                else { osc.frequency.value = 440; gain.gain.value = 0.2; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5); osc.stop(audioCtx.currentTime + 0.5); }
+            } catch (e) { console.log('audio err'); }
         }
 
-        // Set Mode
-        function setMode(mode) {
-            currentMode = mode;
+        // ESCAPE HTML
+        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function (m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
-            // Update UI
-            document.getElementById('modeAccess').classList.remove('active');
-            document.getElementById('modeAssign').classList.remove('active');
-            document.getElementById(`mode${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
-
-            const scanInput = document.getElementById('scanInput');
-            const searchSection = document.getElementById('searchMemberSection');
-            const instructions = document.getElementById('instructions');
-
-            if (mode === 'access') {
-                document.getElementById('modeDescription').textContent = 'Tap RFID card for instant check-in/out';
-                document.getElementById('inputLabel').innerHTML = '<i class="fas fa-microchip"></i> Scan RFID Card / Member ID:';
-                document.getElementById('inputHint').innerHTML = '<i class="fas fa-info-circle"></i> Position cursor here and tap the RFID card on reader';
-                searchSection.style.display = 'none';
-                instructions.innerHTML = `
-                    <strong><i class="fas fa-info-circle"></i> Access Mode Instructions:</strong>
-                    <ul class="mb-0 mt-2">
-                        <li>Connect USB RFID reader to your computer</li>
-                        <li>Position cursor in the scan field above</li>
-                        <li>Tap RFID card on the reader</li>
-                        <li>System automatically checks member IN or OUT</li>
-                        <li>First tap = Check In | Second tap = Check Out</li>
-                        <li>You can also type Member ID manually</li>
-                    </ul>
-                `;
-                scanInput.placeholder = "Tap RFID card or type Member ID...";
-                scanInput.disabled = false;
-                document.getElementById('resultArea').style.display = 'none';
-                clearScan();
-            } else {
-                document.getElementById('modeDescription').textContent = 'Scan RFID card to assign to a member';
-                document.getElementById('inputLabel').innerHTML = '<i class="fas fa-microchip"></i> Scan RFID Card UID:';
-                document.getElementById('inputHint').innerHTML = '<i class="fas fa-info-circle"></i> Tap the RFID card on reader to capture its UID, then search for member';
-                searchSection.style.display = 'block';
-                instructions.innerHTML = `
-                    <strong><i class="fas fa-info-circle"></i> Assign Mode Instructions:</strong>
-                    <ul class="mb-0 mt-2">
-                        <li>First, tap the RFID card on reader to capture its UID</li>
-                        <li>Then search for the member by name, ID, or NRC</li>
-                        <li>Click "Assign RFID" next to the member</li>
-                        <li>The RFID tag will be linked to that member</li>
-                        <li>Member can now use the RFID card for library access</li>
-                    </ul>
-                `;
-                scanInput.placeholder = "Tap RFID card here first...";
-                scanInput.disabled = false;
-                document.getElementById('resultArea').style.display = 'none';
-                clearScan();
-            }
+        // Format date time
+        function formatDateNice(dateStr) {
+            if (!dateStr) return '—';
+            try { let d = new Date(dateStr); return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) { return dateStr; }
         }
 
-        // Auto-detect scan input (for USB reader)
-        document.getElementById('scanInput').addEventListener('input', function (e) {
-            clearTimeout(scanTimeout);
-            const value = this.value.trim();
-
-            if (value.length > 5) {
-                scanTimeout = setTimeout(() => {
-                    if (currentMode === 'access') {
-                        processAccessScan(value);
-                    } else {
-                        processAssignModeScan(value);
-                    }
-                }, 200);
-            }
-        });
-
-        // Enter key support
-        document.getElementById('scanInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const value = this.value.trim();
-                if (value) {
-                    if (currentMode === 'access') {
-                        processAccessScan(value);
-                    } else {
-                        processAssignModeScan(value);
-                    }
-                }
-            }
-        });
-
-        // Process Access Mode Scan (Check-in/out)
-        async function processAccessScan(scannedId) {
-            if (!scannedId) return;
-
-            initAudio();
-
-            const resultArea = document.getElementById('resultArea');
-            resultArea.style.display = 'block';
-            resultArea.innerHTML = `
-                <div class="text-center p-4">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2">Processing scan...</p>
-                </div>
-            `;
-
+        // ---------- SCAN PROCESS (ENTRANCE) ----------
+        async function processEntranceScan(scannedValue) {
+            if (!scannedValue.trim()) { showScanMessage('Please enter or scan a member ID / RFID card', 'danger'); return; }
+            const scanInput = scannedValue.trim();
+            showScanMessage('<div class="spinner-border spinner-border-sm text-primary me-2"></div> Processing...', 'info', true);
             try {
                 const response = await fetch('/api/scan_rfid', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rfid_uid: scannedId })
+                    body: JSON.stringify({ rfid_uid: scanInput })
                 });
-
                 const data = await response.json();
-
                 if (response.ok && data.success) {
-                    displayMemberInfo(data);
-                    playSound(data.action === 'check_in' ? 'check_in' : 'check_out');
-                    loadCurrentMembers();
-
-                    setTimeout(() => {
-                        document.getElementById('scanInput').value = '';
-                        document.getElementById('scanInput').focus();
-                    }, 2000);
+                    displayScanResult(data);
+                    playBeep(data.action === 'check_in' ? 'check_in' : 'check_out');
+                    // Refresh logs automatically (dropdown)
+                    fetchFilteredLogs(1);
+                    // clear result after few seconds but keep visible for a while
+                    setTimeout(() => { const resDiv = document.getElementById('scanResultArea'); if (resDiv && !resDiv.innerHTML.includes('Processing')) { setTimeout(() => { if (resDiv.style.display !== 'none') resDiv.style.opacity = '0.9'; }, 3000); } }, 4000);
+                    document.getElementById('scanExternalId').value = '';
+                    document.getElementById('scanExternalId').focus();
                 } else if (data.is_expired) {
-                    displayExpiredMember(data);
-                    playSound('error');
+                    showExpiredError(data);
+                    playBeep('error');
                 } else {
-                    showError(data.message || 'Member not found');
-                    playSound('error');
+                    showScanMessage(data.message || 'Member not found or invalid ID', 'danger');
+                    playBeep('error');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('Network error. Please try again.');
-                playSound('error');
+            } catch (err) {
+                console.error(err);
+                showScanMessage('Network error. Please try again.', 'danger');
+                playBeep('error');
             }
         }
 
-        // Process Assign Mode - Capture RFID UID
-        async function processAssignModeScan(rfidUid) {
-            if (!rfidUid) return;
-
-            // Check if RFID is already assigned
-            try {
-                const response = await fetch(`/api/check_rfid/${rfidUid}`);
-                const data = await response.json();
-
-                const resultArea = document.getElementById('resultArea');
-                resultArea.style.display = 'block';
-
-                if (data.assigned) {
-                    resultArea.innerHTML = `
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <strong>RFID already assigned!</strong><br>
-                            This RFID card is already assigned to: <strong>${data.member_name}</strong><br>
-                            Member ID: ${data.member_id}
-                        </div>
-                    `;
-                    playSound('error');
-                } else {
-                    // Store the RFID UID for assignment
-                    window.pendingRfidUid = rfidUid;
-                    resultArea.innerHTML = `
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            <strong>RFID captured successfully!</strong><br>
-                            UID: <code>${rfidUid}</code><br><br>
-                            Now search for the member below and click "Assign RFID"
-                        </div>
-                    `;
-                    playSound('check_in');
-                }
-            } catch (error) {
-                console.error('Error checking RFID:', error);
-                showError('Error checking RFID status');
-            }
-
-            setTimeout(() => {
-                document.getElementById('scanInput').value = '';
-                document.getElementById('scanInput').focus();
-            }, 1000);
+        function showScanMessage(msg, type, isLoading = false) {
+            const area = document.getElementById('scanResultArea');
+            area.style.display = 'block';
+            if (isLoading) area.innerHTML = `<div class="alert alert-info rounded-4">${msg}</div>`;
+            else area.innerHTML = `<div class="alert alert-${type === 'danger' ? 'danger' : type} rounded-4 shadow-sm">${msg}</div>`;
+            if (!isLoading) setTimeout(() => { if (area.innerHTML.includes('alert')) area.style.display = 'none'; }, 4000);
+        }
+        function displayScanResult(data) {
+            const isCheckIn = data.action === 'check_in';
+            const badgeHtml = isCheckIn ? '<span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-sign-in-alt"></i> CHECKED IN</span>' : '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-sign-out-alt"></i> CHECKED OUT</span>';
+            const memberHtml = `
+            <div class="d-flex gap-3 align-items-center bg-light p-3 rounded-4">
+                <div class="text-center">
+                    ${data.photo_path ? `<img src="${data.photo_path}" width="70" height="70" class="rounded-circle border border-2 border-white shadow-sm" onerror="this.src='https://via.placeholder.com/70'">` : `<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:70px;height:70px;"><i class="fas fa-user fa-2x"></i></div>`}
+                </div>
+                <div>
+                    ${badgeHtml}
+                    <h5 class="mb-0 mt-1">${escapeHtml(data.full_name)}</h5>
+                    <div><small>ID: ${escapeHtml(data.member_id)}</small> ${data.rfid_uid ? `<span class="rfid-chip ms-2"><i class="fas fa-microchip"></i> ${escapeHtml(data.rfid_uid)}</span>` : ''}</div>
+                    <div class="small text-muted">${data.message}</div>
+                    ${data.days_remaining !== null && data.days_remaining <= 7 && data.days_remaining >= 0 && isCheckIn ? `<div class="alert alert-warning mt-1 py-0 small">⚠️ Expires in ${data.days_remaining} days</div>` : ''}
+                    ${data.action === 'check_out' && data.duration_minutes ? `<div class="small bg-white rounded-pill px-2 py-1 mt-1">⏱️ Session: ${data.duration_minutes} min</div>` : ''}
+                </div>
+            </div>
+        `;
+            const area = document.getElementById('scanResultArea');
+            area.style.display = 'block';
+            area.innerHTML = memberHtml;
+        }
+        function showExpiredError(data) {
+            const area = document.getElementById('scanResultArea');
+            area.style.display = 'block';
+            area.innerHTML = `<div class="alert alert-danger border-0 rounded-4"><i class="fas fa-times-circle"></i> <strong>EXPIRED MEMBERSHIP</strong><br>${data.full_name} (${data.member_id})<br>${data.message}<br><small>Please renew at front desk.</small></div>`;
+            setTimeout(() => area.style.display = 'none', 5000);
         }
 
-        // Search for member
-        async function searchMember() {
-            const query = document.getElementById('memberSearchInput').value.trim();
-            if (!query) {
-                showError('Please enter a search term');
-                return;
-            }
-
-            const resultsDiv = document.getElementById('searchResults');
-            resultsDiv.style.display = 'block';
-            resultsDiv.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary"></div></div>';
-
+        // -------------------- LOGS (ADVANCED FILTER + DROPDOWN) --------------------
+        async function fetchFilteredLogs(page = 1) {
+            const params = new URLSearchParams();
+            params.append('page', page);
+            params.append('per_page', 12);
+            const status = document.getElementById('filterStatusDropdown')?.value || 'all';
+            const user = document.getElementById('filterUserDropdown')?.value.trim() || '';
+            const card = document.getElementById('filterCardDropdown')?.value.trim() || '';
+            const dateFrom = document.getElementById('filterDateFromDropdown')?.value || '';
+            const dateTo = document.getElementById('filterDateToDropdown')?.value || '';
+            if (status !== 'all') params.append('status', status);
+            if (user) params.append('user', user);
+            if (card) params.append('card_id', card);
+            if (dateFrom) params.append('date_from', dateFrom);
+            if (dateTo) params.append('date_to', dateTo);
             try {
-                const response = await fetch(`/api/search_members?q=${encodeURIComponent(query)}`);
+                const response = await fetch(`/api/access_logs?${params.toString()}`);
                 const data = await response.json();
-
-                if (data.success && data.members.length > 0) {
-                    let html = '<div class="list-group mt-3">';
-                    data.members.forEach(member => {
-                        html += `
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>${escapeHtml(member.full_name)}</strong><br>
-                                        <small>ID: ${member.member_id} | NRC: ${member.nrc_number || 'N/A'}</small>
-                                        ${member.rfid_assigned ? '<br><small class="text-success"><i class="fas fa-microchip"></i> RFID Assigned</small>' : ''}
-                                    </div>
-                                    <button class="btn btn-sm ${member.rfid_assigned ? 'btn-secondary' : 'btn-primary'}" 
-                                            onclick="assignRFIToMember(${member.id})" 
-                                            ${member.rfid_assigned ? 'disabled' : ''}>
-                                        <i class="fas fa-microchip"></i> ${member.rfid_assigned ? 'Assigned' : 'Assign RFID'}
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    resultsDiv.innerHTML = html;
-                } else {
-                    resultsDiv.innerHTML = '<div class="alert alert-info mt-3">No members found</div>';
-                }
-            } catch (error) {
-                console.error('Error searching:', error);
-                resultsDiv.innerHTML = '<div class="alert alert-danger mt-3">Error searching members</div>';
-            }
-        }
-
-        // Assign RFID to member
-        async function assignRFIToMember(memberId) {
-            if (!window.pendingRfidUid) {
-                showError('Please scan an RFID card first');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/assign_rfid_to_member', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        member_id: memberId,
-                        rfid_uid: window.pendingRfidUid
-                    })
-                });
-
-                const data = await response.json();
-
                 if (data.success) {
-                    document.getElementById('resultArea').innerHTML = `
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            <strong>RFID assigned successfully!</strong><br>
-                            RFID ${window.pendingRfidUid} assigned to ${data.member_name}
-                        </div>
-                    `;
-                    window.pendingRfidUid = null;
-                    document.getElementById('scanInput').value = '';
-                    document.getElementById('memberSearchInput').value = '';
-                    document.getElementById('searchResults').style.display = 'none';
-                    playSound('check_in');
+                    const logs = data.logs || [];
+                    const summary = data.summary || { total: 0, check_ins: 0, check_outs: 0 };
+                    // update summary badges inside dropdown header
+                    document.getElementById('dropdownTotalLogs').innerText = summary.total;
+                    document.getElementById('dropdownCheckIns').innerText = summary.check_ins;
+                    document.getElementById('dropdownCheckOuts').innerText = summary.check_outs;
+                    document.getElementById('logsCountBadge').innerText = summary.total;
+                    // render logs table
+                    const tbody = document.getElementById('logsDropdownBody');
+                    if (!logs.length) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No matching logs</td></tr>`;
+                    } else {
+                        let html = '';
+                        logs.forEach(log => {
+                            const statusBadge = log.action === 'check_in' ? '<span class="badge-log-status badge-check-in-mini"><i class="fas fa-sign-in-alt"></i> In</span>' : '<span class="badge-log-status badge-check-out-mini"><i class="fas fa-sign-out-alt"></i> Out</span>';
+                            html += `<tr>
+                            <td style="white-space:nowrap;">${escapeHtml(log.timestamp || '')}</td>
+                            <td><strong>${escapeHtml(log.member_name)}</strong><br><small>${escapeHtml(log.member_id)}</small></td>
+                            <td><span class="small font-monospace">${escapeHtml(log.card_id && log.card_id !== 'Not Assigned' ? log.card_id : '—')}</span></td>
+                            <td>${statusBadge}</td>
+                            <td class="small text-muted">${escapeHtml(log.message || (log.action === 'check_in' ? 'Entry' : 'Exit'))}</td>
+                        </tr>`;
+                        });
+                        tbody.innerHTML = html;
+                    }
+                    // pagination
+                    if (data.pagination) {
+                        const total = data.pagination.total;
+                        const perPage = data.pagination.per_page;
+                        const totalPg = Math.ceil(total / perPage);
+                        currentLogsPage = data.pagination.page;
+                        totalLogPages = totalPg;
+                        renderPaginationControls(totalPg);
+                    } else {
+                        renderPaginationControls(1);
+                    }
+                    document.getElementById('logsInfoText').innerText = `${logs.length} record(s)`;
                 } else {
-                    showError(data.message || 'Error assigning RFID');
-                    playSound('error');
+                    console.warn('logs error');
+                    document.getElementById('logsDropdownBody').innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error loading logs</td></tr>`;
                 }
-            } catch (error) {
-                console.error('Error assigning RFID:', error);
-                showError('Error assigning RFID');
-                playSound('error');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('logsDropdownBody').innerHTML = `<tr><td colspan="5" class="text-center">Network error</td></tr>`;
             }
         }
-
-        function displayMemberInfo(data) {
-            let statusClass = '';
-            let statusBadge = '';
-            let actionIcon = '';
-
-            if (data.action === 'check_in') {
-                statusClass = 'status-check-in';
-                statusBadge = '<span class="badge-check-in"><i class="fas fa-sign-in-alt"></i> CHECKED IN</span>';
-                actionIcon = '<i class="fas fa-door-open fa-2x text-success"></i>';
-            } else if (data.action === 'check_out') {
-                statusClass = 'status-check-out';
-                statusBadge = '<span class="badge-check-out"><i class="fas fa-sign-out-alt"></i> CHECKED OUT</span>';
-                actionIcon = '<i class="fas fa-door-closed fa-2x text-warning"></i>';
-            }
-
-            let photoHtml = '';
-            if (data.photo_path) {
-                photoHtml = `<img src="${data.photo_path}" class="member-photo mb-3" alt="Member Photo" onerror="this.src='https://via.placeholder.com/100x100?text=No+Photo'">`;
-            } else {
-                photoHtml = `<div class="member-photo mb-3 d-flex align-items-center justify-content-center bg-light mx-auto" style="font-size: 3rem;"><i class="fas fa-user-circle text-secondary"></i></div>`;
-            }
-
-            let durationHtml = '';
-            if (data.action === 'check_out' && data.duration_minutes) {
-                durationHtml = `
-                    <div class="alert alert-info mt-2 mb-0">
-                        <i class="fas fa-hourglass-half"></i> Session duration: ${data.duration_minutes} minutes
-                        <br><small>Checked in at ${data.check_in_time} | Checked out at ${data.check_out_time}</small>
-                    </div>
-                `;
-            }
-
-            let expiryWarning = '';
-            if (data.days_remaining !== null && data.days_remaining <= 7 && data.days_remaining >= 0) {
-                expiryWarning = `
-                    <div class="alert alert-warning mt-2 mb-0">
-                        <i class="fas fa-exclamation-triangle"></i> Membership expires in ${data.days_remaining} days!
-                    </div>
-                `;
-            }
-
-            const html = `
-                <div class="status-card ${statusClass} p-4 rounded">
-                    <div class="text-center mb-3">${statusBadge}</div>
-                    <div class="text-center">${photoHtml}</div>
-                    <div class="text-center mb-3">${actionIcon}</div>
-                    <table class="table table-sm table-borderless">
-                        <tr><td><strong>Member ID:</strong></td><td>${escapeHtml(data.member_id)}</td></tr>
-                        <tr><td><strong>Name:</strong></td><td class="fw-bold">${escapeHtml(data.full_name)}</td></tr>
-                        ${data.rfid_uid ? `<tr><td><strong>RFID:</strong></td><td><code>${data.rfid_uid}</code></td></tr>` : ''}
-                        ${data.expiry_date ? `<tr><td><strong>Expiry:</strong></td><td>${formatDate(data.expiry_date)}</td></tr>` : ''}
-                    </table>
-                    <div class="alert alert-${data.action === 'check_in' ? 'success' : 'warning'} mb-2 mt-2 text-center">
-                        <strong>${data.message}</strong>
-                    </div>
-                    ${expiryWarning}
-                    ${durationHtml}
-                </div>
-            `;
-            document.getElementById('resultArea').innerHTML = html;
-        }
-
-        function displayExpiredMember(data) {
-            let photoHtml = '';
-            if (data.photo_path) {
-                photoHtml = `<img src="${data.photo_path}" class="member-photo mb-3" alt="Member Photo">`;
-            } else {
-                photoHtml = `<div class="member-photo mb-3 d-flex align-items-center justify-content-center bg-light mx-auto" style="font-size: 3rem;"><i class="fas fa-user-circle text-secondary"></i></div>`;
-            }
-
-            const html = `
-                <div class="status-card status-expired p-4 rounded">
-                    <div class="text-center mb-3">
-                        <span class="badge-expired"><i class="fas fa-times-circle"></i> EXPIRED MEMBERSHIP</span>
-                    </div>
-                    <div class="text-center">${photoHtml}</div>
-                    <table class="table table-sm table-borderless">
-                        <tr><td><strong>Member ID:</strong></td><td>${escapeHtml(data.member_id)}</td></tr>
-                        <tr><td><strong>Name:</strong></td><td>${escapeHtml(data.full_name)}</td></tr>
-                        ${data.expiry_date ? `<tr><td><strong>Expiry Date:</strong></td><td class="text-danger">${formatDate(data.expiry_date)}</td></tr>` : ''}
-                    </table>
-                    <div class="alert alert-danger mb-0 mt-2 text-center">
-                        <strong>${data.message}</strong>
-                    </div>
-                    <div class="text-center mt-3">
-                        <small>Please visit the front desk to renew membership</small>
-                    </div>
-                </div>
-            `;
-            document.getElementById('resultArea').innerHTML = html;
-        }
-
-        async function loadCurrentMembers() {
-            try {
-                const response = await fetch('/api/current_members');
-                const data = await response.json();
-                const container = document.getElementById('currentMembersList');
-
-                if (data.success && data.members.length > 0) {
-                    let html = '<div class="list-group list-group-flush">';
-                    data.members.forEach(member => {
-                        const photoHtml = member.photo_path ?
-                            `<img src="/static/uploads/${member.photo_path}" class="member-avatar me-2" onerror="this.src='https://via.placeholder.com/40x40?text=User'">` :
-                            `<div class="member-avatar me-2 d-inline-flex align-items-center justify-content-center bg-secondary text-white rounded-circle" style="width: 40px; height: 40px;"><i class="fas fa-user"></i></div>`;
-                        html += `
-                            <div class="list-group-item member-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center">
-                                        ${photoHtml}
-                                        <div>
-                                            <strong>${escapeHtml(member.full_name)}</strong><br>
-                                            <small class="text-muted">${member.member_id}</small>
-                                        </div>
-                                    </div>
-                                    <div class="text-end">
-                                        <span class="badge bg-success duration-badge">
-                                            <i class="fas fa-clock"></i> ${member.duration_minutes} min
-                                        </span><br>
-                                        <small class="text-muted">${member.check_in_time}</small>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = `
-                        <div class="text-center p-4">
-                            <i class="fas fa-door-open fa-3x text-muted mb-2"></i>
-                            <p class="text-muted mb-0">No members currently in the library</p>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading current members:', error);
-            }
-        }
-
-        function showError(message) {
-            document.getElementById('resultArea').style.display = 'block';
-            document.getElementById('resultArea').innerHTML = `
-                <div class="alert alert-danger">${escapeHtml(message)}</div>
-            `;
-        }
-
-        function clearScan() {
-            document.getElementById('scanInput').value = '';
-            document.getElementById('scanInput').focus();
-            document.getElementById('resultArea').style.display = 'none';
-            if (currentMode === 'assign') {
-                document.getElementById('memberSearchInput').value = '';
-                document.getElementById('searchResults').style.display = 'none';
-                window.pendingRfidUid = null;
-            }
-        }
-
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-GB', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
+        function renderPaginationControls(totalPages) {
+            const container = document.getElementById('paginationDropdown');
+            if (!container) return;
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
+            let html = `<div class="btn-group btn-group-sm">`;
+            if (currentLogsPage > 1) html += `<button class="btn btn-outline-primary rounded-pill me-1 pagi-btn" data-page="${currentLogsPage - 1}">◀ Prev</button>`;
+            html += `<span class="px-2 py-1 small fw-bold">${currentLogsPage} / ${totalPages}</span>`;
+            if (currentLogsPage < totalPages) html += `<button class="btn btn-outline-primary rounded-pill ms-1 pagi-btn" data-page="${currentLogsPage + 1}">Next ▶</button>`;
+            html += `</div>`;
+            container.innerHTML = html;
+            document.querySelectorAll('.pagi-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const page = parseInt(btn.getAttribute('data-page'));
+                    if (!isNaN(page)) fetchFilteredLogs(page);
+                });
             });
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        // reset & apply logs filter
+        function applyLogsFilter() { fetchFilteredLogs(1); }
+        function clearLogsFilter() {
+            document.getElementById('filterStatusDropdown').value = 'all';
+            document.getElementById('filterUserDropdown').value = '';
+            document.getElementById('filterCardDropdown').value = '';
+            document.getElementById('filterDateFromDropdown').value = '';
+            document.getElementById('filterDateToDropdown').value = '';
+            fetchFilteredLogs(1);
         }
 
-        function playSound(type) {
-            try {
-                if (!audioContext) return;
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                oscillator.type = 'sine';
-                if (type === 'check_in') {
-                    oscillator.frequency.value = 880;
-                    gainNode.gain.value = 0.3;
-                    oscillator.start();
-                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
-                    oscillator.stop(audioContext.currentTime + 0.3);
-                } else if (type === 'check_out') {
-                    oscillator.frequency.value = 660;
-                    gainNode.gain.value = 0.3;
-                    oscillator.start();
-                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
-                    oscillator.stop(audioContext.currentTime + 0.5);
-                } else {
-                    oscillator.frequency.value = 440;
-                    gainNode.gain.value = 0.3;
-                    oscillator.start();
-                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.4);
-                    oscillator.stop(audioContext.currentTime + 0.4);
-                }
-            } catch (e) {
-                console.log('Audio not supported');
+        // ----- DROPDOWN COLLAPSE LOGIC -----
+        const dropdownToggle = document.getElementById('logsDropdownToggle');
+        const panel = document.getElementById('logsCollapsiblePanel');
+        const toggleIcon = document.getElementById('toggleIcon');
+        let isPanelOpen = false;
+        dropdownToggle.addEventListener('click', () => {
+            isPanelOpen = !isPanelOpen;
+            panel.style.display = isPanelOpen ? 'block' : 'none';
+            toggleIcon.classList.toggle('rotate-icon', isPanelOpen);
+            if (isPanelOpen && !panel.dataset.loaded) {
+                fetchFilteredLogs(1);
+                panel.dataset.loaded = 'true';
             }
-        }
+        });
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function () {
-            setMode('access');
-            loadCurrentMembers();
-            setInterval(loadCurrentMembers, 30000);
-            document.getElementById('scanInput').focus();
+        // ----- EVENT LISTENERS & INIT-----
+        document.getElementById('processScanBtn').addEventListener('click', () => {
+            initAudio();
+            const val = document.getElementById('scanExternalId').value;
+            processEntranceScan(val);
+        });
+        document.getElementById('clearScanBtn').addEventListener('click', () => {
+            document.getElementById('scanExternalId').value = '';
+            document.getElementById('scanResultArea').style.display = 'none';
+            document.getElementById('scanExternalId').focus();
+        });
+        document.getElementById('applyLogsFilterBtn')?.addEventListener('click', applyLogsFilter);
+        document.getElementById('clearLogsFilterBtn')?.addEventListener('click', clearLogsFilter);
+        // Auto-scan detection for USB reader
+        const scanField = document.getElementById('scanExternalId');
+        let scanTimeout = null;
+        scanField.addEventListener('input', (e) => {
+            clearTimeout(scanTimeout);
+            const val = scanField.value.trim();
+            if (val.length >= 6) {
+                scanTimeout = setTimeout(() => {
+                    const current = scanField.value.trim();
+                    if (current === val && current.length > 0) {
+                        initAudio();
+                        processEntranceScan(current);
+                    }
+                }, 280);
+            }
+        });
+        scanField.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); initAudio(); processEntranceScan(scanField.value.trim()); } });
+        // initial load cold start (only when needed)
+        document.addEventListener('DOMContentLoaded', () => {
+            scanField.focus();
+            // preload logs? only if panel is opened by user? but we can silently load summary not required
+            // we will load first summary quickly using api silently for badge
+            fetch('/api/access_logs?page=1&per_page=1').then(r => r.json()).then(d => {
+                if (d.success && d.summary) {
+                    document.getElementById('dropdownTotalLogs').innerText = d.summary.total || 0;
+                    document.getElementById('dropdownCheckIns').innerText = d.summary.check_ins || 0;
+                    document.getElementById('dropdownCheckOuts').innerText = d.summary.check_outs || 0;
+                    document.getElementById('logsCountBadge').innerText = d.summary.total || 0;
+                }
+            }).catch(e => console.log);
         });
     </script>
 </body>
