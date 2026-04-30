@@ -1549,30 +1549,107 @@ def access_logs():
 @app.route('/api/access_logs')
 @login_required
 def api_access_logs():
-    """API endpoint for access logs"""
+    """
+    API endpoint for access logs with advanced filtering.
+    Supports filtering by status (check_in/check_out), user (member name or ID),
+    card ID (RFID UID), date_from, and date_to.
+    Returns total logs, check-ins, check-outs summary and paginated results.
+    """
     try:
-        limit = request.args.get('limit', 100, type=int)
-        logs = AccessLog.query.order_by(
-            AccessLog.timestamp.desc()).limit(limit).all()
+        # Get query parameters
+        status = request.args.get('status', 'all')
+        user_query = request.args.get('user', '').strip()
+        card_id = request.args.get('card_id', '').strip()
+        date_from_str = request.args.get('date_from', '')
+        date_to_str = request.args.get('date_to', '')
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
 
+        # Build base query with join to Member table
+        query = db.session.query(AccessLog, Member).join(
+            Member, AccessLog.member_id == Member.id
+        )
+
+        # Apply filters
+        # Status filter (check_in or check_out)
+        if status != 'all' and status in ['check_in', 'check_out']:
+            query = query.filter(AccessLog.action == status)
+
+        # User filter (search by member name or member_id)
+        if user_query:
+            query = query.filter(
+                db.or_(
+                    Member.full_name.ilike(f'%{user_query}%'),
+                    Member.member_id.ilike(f'%{user_query}%')
+                )
+            )
+
+        # Card ID filter (RFID UID)
+        if card_id:
+            query = query.filter(Member.rfid_uid.ilike(f'%{card_id}%'))
+
+        # Date from filter
+        if date_from_str:
+            try:
+                date_from = datetime.strptime(date_from_str, '%Y-%m-%d')
+                query = query.filter(AccessLog.timestamp >= date_from)
+            except ValueError:
+                pass
+
+        # Date to filter (end of day)
+        if date_to_str:
+            try:
+                date_to = datetime.strptime(date_to_str, '%Y-%m-%d')
+                date_to = date_to.replace(hour=23, minute=59, second=59)
+                query = query.filter(AccessLog.timestamp <= date_to)
+            except ValueError:
+                pass
+
+        # Get total count for summary
+        total_logs = query.count()
+
+        # Get check-in count
+        check_ins = query.filter(AccessLog.action == 'check_in').count()
+
+        # Get check-out count
+        check_outs = query.filter(AccessLog.action == 'check_out').count()
+
+        # Order by timestamp descending (newest first) and paginate
+        query = query.order_by(AccessLog.timestamp.desc())
+        paginated = query.offset((page - 1) * per_page).limit(per_page).all()
+
+        # Format the logs data
         logs_data = []
-        for log in logs:
+        for access_log, member in paginated:
             logs_data.append({
-                'id': log.id,
-                'member_id': log.member.member_id,
-                'member_name': log.member.full_name,
-                'action': log.action,
-                'status': log.status,
-                'message': log.message,
-                'timestamp': log.timestamp.strftime('%Y-%m-%d %I:%M:%S %p')
+                'id': access_log.id,
+                'member_id': member.member_id,
+                'member_name': member.full_name,
+                'card_id': member.rfid_uid or 'Not Assigned',
+                'action': access_log.action,
+                'status': access_log.status,
+                'message': access_log.message,
+                'timestamp': access_log.timestamp.strftime('%Y-%m-%d %I:%M:%S %p'),
+                'iso_timestamp': access_log.timestamp.isoformat()
             })
 
         return jsonify({
             'success': True,
             'logs': logs_data,
-            'total': len(logs_data)
+            'summary': {
+                'total': total_logs,
+                'check_ins': check_ins,
+                'check_outs': check_outs
+            },
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total_logs
+            }
         })
     except Exception as e:
+        print(f"Error in api_access_logs: {e}")
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
