@@ -31,11 +31,11 @@ migrate = Migrate(app, db)
 
 # ZCAS University Colors
 ZCAS_COLORS = {
-    'primary': '#1E3A8A',      # Dark Blue
-    'secondary': '#DC2626',    # Red
-    'accent': '#059669',       # Green
-    'light': '#EFF6FF',        # Light Blue
-    'dark': '#1E3A8A'          # Dark Blue
+    'primary': '#1E3A8A',
+    'secondary': '#DC2626',
+    'accent': '#059669',
+    'light': '#EFF6FF',
+    'dark': '#1E3A8A'
 }
 
 # ZCAS University Contact Information
@@ -49,10 +49,10 @@ ZCAS_CONTACT = {
 
 # CORRECTED FEE STRUCTURE - NORMAL FEES AS SPECIFIED
 FEE_STRUCTURE = {
-    'id_card': 100,      # K100 for ID card (NORMAL RATE)
-    'wifi': 120,         # K120 for WiFi (NORMAL RATE)
-    'monthly': 90,       # K90 per month (Stream One)
-    'six_months': 500    # K500 for six months (Stream Two) - Better deal
+    'id_card': 100,
+    'wifi': 120,
+    'monthly': 90,
+    'six_months': 500
 }
 
 # Ensure upload directory exists
@@ -95,8 +95,7 @@ class Member(db.Model):
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     expiry_date = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default='active')
-    rfid_uid = db.Column(db.String(50), unique=True,
-                         nullable=True)  # RFID UID field
+    rfid_uid = db.Column(db.String(50), unique=True, nullable=True)
 
     payments = db.relationship('Payment', backref='member', lazy=True)
     access_logs = db.relationship('AccessLog', backref='member', lazy=True)
@@ -128,7 +127,7 @@ class AccessLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     member_id = db.Column(db.Integer, db.ForeignKey(
         'member.id'), nullable=False)
-    action = db.Column(db.String(20), nullable=False)  # check_in or check_out
+    action = db.Column(db.String(20), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), default='success')
     message = db.Column(db.String(200), nullable=True)
@@ -244,7 +243,6 @@ def calculate_renewal_fees(membership_type, duration_months=1):
 
 @app.context_processor
 def inject_template_vars():
-    # Check multiple possible logo locations
     logo_exists = (
         os.path.exists('static/images/logo.png') or
         os.path.exists('static/uploads/logo.png') or
@@ -309,10 +307,7 @@ def dashboard():
         active_members = Member.query.filter(Member.status == 'active').count()
         expired_members = Member.query.filter(
             Member.status == 'expired').count()
-
-        # Get current members in library
         current_in_library = CurrentSession.query.count()
-
         monthly_members = Member.query.filter_by(
             membership_type='monthly').count()
         six_months_members = Member.query.filter_by(
@@ -351,8 +346,7 @@ def dashboard():
         flash(f'Error loading dashboard: {str(e)}', 'error')
         return render_template('dashboard.html',
                                total_members=0, active_members=0, expired_members=0,
-                               current_in_library=0,
-                               monthly_members=0, six_months_members=0,
+                               current_in_library=0, monthly_members=0, six_months_members=0,
                                monthly_revenue=0, six_months_revenue=0, total_revenue=0,
                                members=[], logo_exists=False)
 
@@ -434,9 +428,6 @@ def calendar_view():
 @login_required
 def calendar_events_api():
     try:
-        start_date_str = request.args.get('start')
-        end_date_str = request.args.get('end')
-
         events = []
         members = Member.query.all()
         today_date = datetime.utcnow().date()
@@ -1221,11 +1212,9 @@ def print_receipt(payment_id):
 @app.route('/print_id/<int:member_id>')
 @login_required
 def print_id(member_id):
-    """Print ID card using HTML/CSS template with exact specifications"""
     member = Member.query.get_or_404(member_id)
 
     try:
-        # Render the HTML template for ID card printing
         return render_template('print_id_card.html',
                                member=member,
                                contact_info=ZCAS_CONTACT)
@@ -1256,7 +1245,7 @@ def api_scan_rfid():
         # First try to find by RFID UID
         member = Member.query.filter_by(rfid_uid=scanned_id).first()
 
-        # If not found by RFID, try by member ID (for backward compatibility)
+        # If not found by RFID, try by member ID
         if not member:
             member = Member.query.filter_by(member_id=scanned_id).first()
 
@@ -1282,12 +1271,13 @@ def api_scan_rfid():
                 member.status = 'expired'
                 db.session.commit()
 
+        # IMPORTANT: Block expired members from accessing the library
         if is_expired:
             log = AccessLog(
                 member_id=member.id,
                 action='check_in',
                 status='denied',
-                message=f'Membership expired on {member.expiry_date.strftime("%Y-%m-%d")}'
+                message=f'Access DENIED - Membership expired on {member.expiry_date.strftime("%Y-%m-%d")}'
             )
             db.session.add(log)
             db.session.commit()
@@ -1303,7 +1293,7 @@ def api_scan_rfid():
                 'member_id': member.member_id,
                 'full_name': member.full_name,
                 'photo_path': photo_url,
-                'message': 'Membership has expired. Please renew.',
+                'message': 'ACCESS DENIED: Your membership has expired. Please renew at the front desk.',
                 'expiry_date': member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else None,
                 'days_remaining': days_remaining
             }), 403
@@ -1346,6 +1336,17 @@ def api_scan_rfid():
                 'rfid_uid': member.rfid_uid
             })
         else:
+            # EXTRA SAFETY: Double-check member is not expired before allowing check-in
+            if is_expired:
+                return jsonify({
+                    'success': False,
+                    'is_expired': True,
+                    'member_id': member.member_id,
+                    'full_name': member.full_name,
+                    'message': 'ACCESS DENIED: Membership expired. Cannot check in.',
+                    'expiry_date': member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else None
+                }), 403
+
             # Member is outside - check them in
             new_session = CurrentSession(member_id=member.id)
             db.session.add(new_session)
@@ -1416,7 +1417,6 @@ def api_assign_rfid_to_member():
         if not member_id or not rfid_uid:
             return jsonify({'success': False, 'message': 'Missing member ID or RFID UID'}), 400
 
-        # Check if RFID is already assigned to another member
         existing = Member.query.filter_by(rfid_uid=rfid_uid).first()
         if existing and existing.id != member_id:
             return jsonify({'success': False, 'message': f'RFID already assigned to {existing.full_name}'}), 400
@@ -1496,12 +1496,7 @@ def api_scan_member():
         data = request.get_json()
         member_id = data.get('member_id')
 
-        # Create a new request with the same data but to the RFID endpoint
-        from flask import Request
-        rfid_data = {'rfid_uid': member_id}
-
-        # Call the RFID scan function internally
-        with app.test_request_context(json=rfid_data):
+        with app.test_request_context(json={'rfid_uid': member_id}):
             return api_scan_rfid()
 
     except Exception as e:
@@ -1551,12 +1546,10 @@ def access_logs():
 def api_access_logs():
     """
     API endpoint for access logs with advanced filtering.
-    Supports filtering by status (check_in/check_out), user (member name or ID),
-    card ID (RFID UID), date_from, and date_to.
+    Supports filtering by status, user, card ID, date_from, and date_to.
     Returns total logs, check-ins, check-outs summary and paginated results.
     """
     try:
-        # Get query parameters
         status = request.args.get('status', 'all')
         user_query = request.args.get('user', '').strip()
         card_id = request.args.get('card_id', '').strip()
@@ -1565,17 +1558,12 @@ def api_access_logs():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
 
-        # Build base query with join to Member table
         query = db.session.query(AccessLog, Member).join(
-            Member, AccessLog.member_id == Member.id
-        )
+            Member, AccessLog.member_id == Member.id)
 
-        # Apply filters
-        # Status filter (check_in or check_out)
         if status != 'all' and status in ['check_in', 'check_out']:
             query = query.filter(AccessLog.action == status)
 
-        # User filter (search by member name or member_id)
         if user_query:
             query = query.filter(
                 db.or_(
@@ -1584,11 +1572,9 @@ def api_access_logs():
                 )
             )
 
-        # Card ID filter (RFID UID)
         if card_id:
             query = query.filter(Member.rfid_uid.ilike(f'%{card_id}%'))
 
-        # Date from filter
         if date_from_str:
             try:
                 date_from = datetime.strptime(date_from_str, '%Y-%m-%d')
@@ -1596,7 +1582,6 @@ def api_access_logs():
             except ValueError:
                 pass
 
-        # Date to filter (end of day)
         if date_to_str:
             try:
                 date_to = datetime.strptime(date_to_str, '%Y-%m-%d')
@@ -1605,20 +1590,13 @@ def api_access_logs():
             except ValueError:
                 pass
 
-        # Get total count for summary
         total_logs = query.count()
-
-        # Get check-in count
         check_ins = query.filter(AccessLog.action == 'check_in').count()
-
-        # Get check-out count
         check_outs = query.filter(AccessLog.action == 'check_out').count()
 
-        # Order by timestamp descending (newest first) and paginate
         query = query.order_by(AccessLog.timestamp.desc())
         paginated = query.offset((page - 1) * per_page).limit(per_page).all()
 
-        # Format the logs data
         logs_data = []
         for access_log, member in paginated:
             logs_data.append({
@@ -1682,7 +1660,7 @@ def scan_member():
 
 @app.route('/api/check_membership', methods=['GET', 'POST'])
 def api_check_membership():
-    """API endpoint for USB reader to check membership status (legacy)"""
+    """API endpoint for USB reader to check membership status"""
     try:
         if request.method == 'POST':
             data = request.get_json()
