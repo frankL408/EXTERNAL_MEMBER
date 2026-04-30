@@ -35,6 +35,35 @@
             padding: 1.5rem;
             text-align: center;
             color: white;
+            position: relative;
+        }
+
+        /* Back to Main Site Button - Prominent and well positioned */
+        .back-main-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 60px;
+            padding: 8px 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: 0.25s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .back-main-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .rfid-icon-big {
@@ -79,7 +108,6 @@
             transform: scale(0.98);
         }
 
-        /* Live status badge */
         .member-photo-sm {
             width: 48px;
             height: 48px;
@@ -187,6 +215,17 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+
+            .back-main-btn {
+                font-size: 0.7rem;
+                padding: 5px 12px;
+                top: 12px;
+                right: 12px;
+            }
+
+            .scan-header h3 {
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -196,6 +235,10 @@
         <!-- ENTRANCE SCANNER SECTION (CORE) -->
         <div class="scan-hero">
             <div class="scan-header">
+                <!-- Back to Main Site Button -->
+                <a href="{{ url_for('dashboard') }}" class="back-main-btn" id="backToMainBtn">
+                    <i class="fas fa-home"></i> Main Site
+                </a>
                 <div class="rfid-icon-big mx-auto">
                     <i class="fas fa-id-card"></i>
                 </div>
@@ -366,11 +409,19 @@
                     displayScanResult(data);
                     playBeep(data.action === 'check_in' ? 'check_in' : 'check_out');
                     // Refresh logs automatically (dropdown)
-                    fetchFilteredLogs(1);
-                    // clear result after few seconds but keep visible for a while
-                    setTimeout(() => { const resDiv = document.getElementById('scanResultArea'); if (resDiv && !resDiv.innerHTML.includes('Processing')) { setTimeout(() => { if (resDiv.style.display !== 'none') resDiv.style.opacity = '0.9'; }, 3000); } }, 4000);
+                    if (document.getElementById('logsCollapsiblePanel').style.display === 'block') {
+                        fetchFilteredLogs(currentLogsPage);
+                    } else {
+                        fetchSummaryOnly();
+                    }
                     document.getElementById('scanExternalId').value = '';
                     document.getElementById('scanExternalId').focus();
+                    setTimeout(() => {
+                        const area = document.getElementById('scanResultArea');
+                        if (area && area.style.display !== 'none') {
+                            setTimeout(() => { if (area) area.style.display = 'none'; }, 800);
+                        }
+                    }, 5000);
                 } else if (data.is_expired) {
                     showExpiredError(data);
                     playBeep('error');
@@ -388,10 +439,12 @@
         function showScanMessage(msg, type, isLoading = false) {
             const area = document.getElementById('scanResultArea');
             area.style.display = 'block';
+            area.style.opacity = '1';
             if (isLoading) area.innerHTML = `<div class="alert alert-info rounded-4">${msg}</div>`;
             else area.innerHTML = `<div class="alert alert-${type === 'danger' ? 'danger' : type} rounded-4 shadow-sm">${msg}</div>`;
-            if (!isLoading) setTimeout(() => { if (area.innerHTML.includes('alert')) area.style.display = 'none'; }, 4000);
+            if (!isLoading) setTimeout(() => { if (area.innerHTML.includes('alert')) area.style.display = 'none'; }, 4500);
         }
+
         function displayScanResult(data) {
             const isCheckIn = data.action === 'check_in';
             const badgeHtml = isCheckIn ? '<span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-sign-in-alt"></i> CHECKED IN</span>' : '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-sign-out-alt"></i> CHECKED OUT</span>';
@@ -414,6 +467,7 @@
             area.style.display = 'block';
             area.innerHTML = memberHtml;
         }
+
         function showExpiredError(data) {
             const area = document.getElementById('scanResultArea');
             area.style.display = 'block';
@@ -442,12 +496,10 @@
                 if (data.success) {
                     const logs = data.logs || [];
                     const summary = data.summary || { total: 0, check_ins: 0, check_outs: 0 };
-                    // update summary badges inside dropdown header
                     document.getElementById('dropdownTotalLogs').innerText = summary.total;
                     document.getElementById('dropdownCheckIns').innerText = summary.check_ins;
                     document.getElementById('dropdownCheckOuts').innerText = summary.check_outs;
                     document.getElementById('logsCountBadge').innerText = summary.total;
-                    // render logs table
                     const tbody = document.getElementById('logsDropdownBody');
                     if (!logs.length) {
                         tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No matching logs</td></tr>`;
@@ -465,7 +517,6 @@
                         });
                         tbody.innerHTML = html;
                     }
-                    // pagination
                     if (data.pagination) {
                         const total = data.pagination.total;
                         const perPage = data.pagination.per_page;
@@ -478,7 +529,6 @@
                     }
                     document.getElementById('logsInfoText').innerText = `${logs.length} record(s)`;
                 } else {
-                    console.warn('logs error');
                     document.getElementById('logsDropdownBody').innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error loading logs</td></tr>`;
                 }
             } catch (err) {
@@ -486,6 +536,20 @@
                 document.getElementById('logsDropdownBody').innerHTML = `<tr><td colspan="5" class="text-center">Network error</td></tr>`;
             }
         }
+
+        async function fetchSummaryOnly() {
+            try {
+                const response = await fetch(`/api/access_logs?page=1&per_page=1`);
+                const data = await response.json();
+                if (data.success && data.summary) {
+                    document.getElementById('dropdownTotalLogs').innerText = data.summary.total || 0;
+                    document.getElementById('dropdownCheckIns').innerText = data.summary.check_ins || 0;
+                    document.getElementById('dropdownCheckOuts').innerText = data.summary.check_outs || 0;
+                    document.getElementById('logsCountBadge').innerText = data.summary.total || 0;
+                }
+            } catch (e) { console.log(e); }
+        }
+
         function renderPaginationControls(totalPages) {
             const container = document.getElementById('paginationDropdown');
             if (!container) return;
@@ -504,7 +568,6 @@
             });
         }
 
-        // reset & apply logs filter
         function applyLogsFilter() { fetchFilteredLogs(1); }
         function clearLogsFilter() {
             document.getElementById('filterStatusDropdown').value = 'all';
@@ -530,6 +593,12 @@
             }
         });
 
+        // ----- Back to Main Site: fallback if url_for not resolved (static)-----
+        const backBtn = document.getElementById('backToMainBtn');
+        if (backBtn && backBtn.getAttribute('href') === '{{ url_for('dashboard') }}') {
+            backBtn.setAttribute('href', '/dashboard');
+        }
+
         // ----- EVENT LISTENERS & INIT-----
         document.getElementById('processScanBtn').addEventListener('click', () => {
             initAudio();
@@ -543,6 +612,7 @@
         });
         document.getElementById('applyLogsFilterBtn')?.addEventListener('click', applyLogsFilter);
         document.getElementById('clearLogsFilterBtn')?.addEventListener('click', clearLogsFilter);
+
         // Auto-scan detection for USB reader
         const scanField = document.getElementById('scanExternalId');
         let scanTimeout = null;
@@ -560,19 +630,11 @@
             }
         });
         scanField.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); initAudio(); processEntranceScan(scanField.value.trim()); } });
-        // initial load cold start (only when needed)
+
+        // initial load summary without opening panel
         document.addEventListener('DOMContentLoaded', () => {
             scanField.focus();
-            // preload logs? only if panel is opened by user? but we can silently load summary not required
-            // we will load first summary quickly using api silently for badge
-            fetch('/api/access_logs?page=1&per_page=1').then(r => r.json()).then(d => {
-                if (d.success && d.summary) {
-                    document.getElementById('dropdownTotalLogs').innerText = d.summary.total || 0;
-                    document.getElementById('dropdownCheckIns').innerText = d.summary.check_ins || 0;
-                    document.getElementById('dropdownCheckOuts').innerText = d.summary.check_outs || 0;
-                    document.getElementById('logsCountBadge').innerText = d.summary.total || 0;
-                }
-            }).catch(e => console.log);
+            fetchSummaryOnly();
         });
     </script>
 </body>
