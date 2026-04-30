@@ -250,6 +250,329 @@ def scan_member():
     return render_template('scan_member.html')
 
 
+# ========== CALENDAR ROUTES ==========
+
+@app.route('/calendar')
+@login_required
+def calendar_view():
+    """Calendar view for membership expiries and registrations"""
+    try:
+        members = Member.query.all()
+        calendar_events = []
+        upcoming_events = []
+        today_date = datetime.utcnow().date()
+
+        for member in members:
+            if member.registration_date:
+                registration_date = member.registration_date.date() if hasattr(
+                    member.registration_date, 'date') else member.registration_date
+                calendar_events.append({
+                    'id': f'reg_{member.id}',
+                    'title': f'Registration: {member.full_name}',
+                    'start': registration_date.strftime('%Y-%m-%d'),
+                    'color': '#1E3A8A',
+                    'type': 'registration',
+                    'member_id': member.member_id,
+                    'description': f'New member registration: {member.full_name}',
+                    'action_url': url_for('member_details', member_id=member.id)
+                })
+
+            if member.expiry_date:
+                expiry_date = member.expiry_date.date() if hasattr(
+                    member.expiry_date, 'date') else member.expiry_date
+                days_until_expiry = (expiry_date - today_date).days
+                color = '#DC2626' if days_until_expiry < 0 else '#F59E0B'
+
+                calendar_events.append({
+                    'id': f'exp_{member.id}',
+                    'title': f'Expiry: {member.full_name}',
+                    'start': expiry_date.strftime('%Y-%m-%d'),
+                    'color': color,
+                    'type': 'expiry',
+                    'member_id': member.member_id,
+                    'description': f'Membership expiry for {member.full_name}',
+                    'action_url': url_for('renew_member', member_id=member.id) if days_until_expiry < 0 else url_for('member_details', member_id=member.id)
+                })
+
+        upcoming_date = today_date + timedelta(days=30)
+
+        for event in calendar_events:
+            try:
+                event_date = datetime.strptime(
+                    event['start'], '%Y-%m-%d').date()
+                if today_date <= event_date <= upcoming_date:
+                    event_title = event['title'].split(
+                        ': ')[-1] if ': ' in event['title'] else event['title']
+                    upcoming_events.append({
+                        'type': event.get('type', 'event'),
+                        'title': event_title,
+                        'date': event_date,
+                        'member_id': event.get('member_id', 'N/A')
+                    })
+            except (ValueError, TypeError) as e:
+                print(f"Error processing event date: {e}")
+                continue
+
+        upcoming_events.sort(key=lambda x: x['date'])
+        upcoming_events = upcoming_events[:10]
+
+        return render_template('calendar.html',
+                               calendar_events=calendar_events,
+                               upcoming_events=upcoming_events)
+
+    except Exception as e:
+        print(f"Error loading calendar events: {e}")
+        flash(f'Error loading calendar: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+
+# ========== MEMBER MANAGEMENT ROUTES ==========
+
+@app.route('/member_details/<int:member_id>')
+@login_required
+def member_details(member_id):
+    """View member details"""
+    try:
+        member = Member.query.get_or_404(member_id)
+        payments = Payment.query.filter_by(member_id=member_id).order_by(
+            Payment.payment_date.desc()).all()
+        total_paid = sum(payment.amount for payment in payments)
+
+        return render_template('member_details.html',
+                               member=member,
+                               payments=payments,
+                               total_paid=total_paid)
+    except Exception as e:
+        flash(f'Error loading member details: {str(e)}', 'error')
+        return redirect(url_for('view_members'))
+
+
+@app.route('/renew_member/<int:member_id>', methods=['GET', 'POST'])
+@login_required
+def renew_member(member_id):
+    """Renew member membership"""
+    member = Member.query.get_or_404(member_id)
+
+    if request.method == 'GET':
+        return render_template('renew_member.html', member=member)
+
+    elif request.method == 'POST':
+        try:
+            renew_period = request.form.get('renew_period', 'monthly')
+            duration_months = request.form.get('duration_months', '1')
+            payment_method = request.form.get('payment_method', 'Cash')
+            renewal_date_str = request.form.get('renewal_date', '')
+
+            if renewal_date_str:
+                try:
+                    renewal_date = datetime.strptime(
+                        renewal_date_str, '%Y-%m-%d')
+                except ValueError:
+                    renewal_date = datetime.utcnow()
+            else:
+                renewal_date = datetime.utcnow()
+
+            try:
+                duration_months = int(duration_months)
+                if duration_months < 1:
+                    duration_months = 1
+                elif duration_months > 12:
+                    duration_months = 12
+            except (ValueError, TypeError):
+                duration_months = 1
+
+            # Calculate renewal fee
+            if renew_period == 'monthly':
+                renewal_fee = FEE_STRUCTURE['monthly'] * duration_months
+                new_expiry = renewal_date + \
+                    timedelta(days=30 * duration_months)
+            else:
+                renewal_fee = FEE_STRUCTURE['six_months']
+                new_expiry = renewal_date + timedelta(days=180)
+
+            member.expiry_date = new_expiry
+            member.status = 'active'
+            member.membership_type = renew_period
+
+            # Create payment record
+            receipt_number = generate_receipt_number()
+            payment = Payment(
+                receipt_number=receipt_number,
+                member_id=member.id,
+                amount=renewal_fee,
+                payment_method=payment_method,
+                received_by=current_user.username,
+                payment_date=renewal_date
+            )
+
+            payment.set_fee_breakdown({
+                'membership_fee': renewal_fee,
+                'is_renewal': True,
+                'membership_type': renew_period,
+                'duration_months': duration_months if renew_period == 'monthly' else 6
+            })
+
+            db.session.add(payment)
+            db.session.commit()
+
+            duration_text = f"{duration_months} month(s)" if renew_period == 'monthly' else "6 months"
+            flash(
+                f'Member {member.full_name} renewed successfully for {duration_text}! Renewal fee: K{renewal_fee}', 'success')
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error renewing member: {e}")
+            flash(f'Error renewing member: {str(e)}', 'error')
+
+        return redirect(url_for('view_members'))
+
+
+@app.route('/members')
+@login_required
+def view_members():
+    try:
+        members = Member.query.order_by(Member.registration_date.desc()).all()
+        return render_template('members.html', members=members)
+    except Exception as e:
+        flash(f'Error loading members: {str(e)}', 'error')
+        return render_template('members.html', members=[])
+
+
+@app.route('/register_member', methods=['GET', 'POST'])
+@login_required
+def register_member():
+    if request.method == 'GET':
+        return render_template('register_member.html')
+
+    elif request.method == 'POST':
+        try:
+            full_name = request.form.get('full_name', '').strip()
+            email = request.form.get('email', '').strip()
+            phone = request.form.get('phone', '').strip()
+            address = request.form.get('address', '').strip()
+            nrc_number = request.form.get('nrc_number', '').strip()
+            membership_type = request.form.get('membership_type')
+
+            if not all([full_name, email, phone, address, nrc_number, membership_type]):
+                flash('Please fill in all required fields', 'error')
+                return render_template('register_member.html')
+
+            member_id = generate_member_id()
+            registration_date = datetime.utcnow()
+
+            member = Member(
+                member_id=member_id,
+                full_name=full_name,
+                email=email,
+                phone=phone,
+                address=address,
+                nrc_number=nrc_number,
+                membership_type=membership_type,
+                registration_date=registration_date,
+                status='active'
+            )
+
+            if membership_type == 'monthly':
+                member.expiry_date = registration_date + timedelta(days=30)
+            else:
+                member.expiry_date = registration_date + timedelta(days=180)
+
+            db.session.add(member)
+            db.session.commit()
+
+            flash(
+                f'Member registered successfully! Member ID: {member.member_id}', 'success')
+            return redirect(url_for('view_members'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error registering member: {str(e)}', 'error')
+            return render_template('register_member.html')
+
+
+@app.route('/auto_check_expiry')
+@login_required
+def auto_check_expiry():
+    try:
+        members = Member.query.filter(Member.status == 'active').all()
+        updated_count = 0
+        today = datetime.utcnow().date()
+
+        for member in members:
+            if member.expiry_date:
+                expiry_date = member.expiry_date.date()
+                if expiry_date < today:
+                    member.status = 'expired'
+                    updated_count += 1
+
+        if updated_count > 0:
+            db.session.commit()
+            flash(
+                f'Updated {updated_count} members to expired status', 'warning')
+        else:
+            flash('No expired members found', 'info')
+    except Exception as e:
+        flash(f'Error checking expiry: {str(e)}', 'error')
+
+    return redirect(url_for('view_members'))
+
+
+# ========== PAYMENTS AND REPORTS ROUTES ==========
+
+@app.route('/payments')
+@login_required
+def view_payments():
+    """View all payments"""
+    try:
+        payments = Payment.query.order_by(Payment.payment_date.desc()).all()
+        total_revenue = sum(payment.amount for payment in payments)
+
+        return render_template('payments.html',
+                               payments=payments,
+                               total_revenue=total_revenue,
+                               total_payments=len(payments))
+    except Exception as e:
+        flash(f'Error loading payments: {str(e)}', 'error')
+        return render_template('payments.html', payments=[], total_revenue=0, total_payments=0)
+
+
+@app.route('/reports')
+@login_required
+def reports():
+    """Generate reports"""
+    try:
+        total_members = Member.query.count()
+        active_members = Member.query.filter_by(status='active').count()
+        expired_members = Member.query.filter_by(status='expired').count()
+
+        payments = Payment.query.all()
+        total_revenue = sum(payment.amount for payment in payments)
+
+        monthly_members = Member.query.filter_by(
+            membership_type='monthly').count()
+        six_months_members = Member.query.filter_by(
+            membership_type='six_months').count()
+
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        recent_registrations = Member.query.filter(
+            Member.registration_date >= thirty_days_ago).count()
+
+        return render_template('reports.html',
+                               total_members=total_members,
+                               active_members=active_members,
+                               expired_members=expired_members,
+                               total_revenue=total_revenue,
+                               monthly_members=monthly_members,
+                               six_months_members=six_months_members,
+                               recent_registrations=recent_registrations)
+
+    except Exception as e:
+        flash(f'Error generating reports: {str(e)}', 'error')
+        return render_template('reports.html',
+                               total_members=0, active_members=0, expired_members=0,
+                               total_revenue=0, monthly_members=0, six_months_members=0, recent_registrations=0)
+
+
 # ========== RFID SCANNING API ENDPOINTS ==========
 
 @app.route('/api/scan_rfid', methods=['POST'])
@@ -562,98 +885,6 @@ def api_access_logs():
     except Exception as e:
         print(f"Error in api_access_logs: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
-
-@app.route('/members')
-@login_required
-def view_members():
-    try:
-        members = Member.query.order_by(Member.registration_date.desc()).all()
-        return render_template('members.html', members=members)
-    except Exception as e:
-        flash(f'Error loading members: {str(e)}', 'error')
-        return render_template('members.html', members=[])
-
-
-@app.route('/auto_check_expiry')
-@login_required
-def auto_check_expiry():
-    try:
-        members = Member.query.filter(Member.status == 'active').all()
-        updated_count = 0
-        today = datetime.utcnow().date()
-
-        for member in members:
-            if member.expiry_date:
-                expiry_date = member.expiry_date.date()
-                if expiry_date < today:
-                    member.status = 'expired'
-                    updated_count += 1
-
-        if updated_count > 0:
-            db.session.commit()
-            flash(
-                f'Updated {updated_count} members to expired status', 'warning')
-        else:
-            flash('No expired members found', 'info')
-    except Exception as e:
-        flash(f'Error checking expiry: {str(e)}', 'error')
-
-    return redirect(url_for('view_members'))
-
-
-# ========== MEMBER MANAGEMENT ROUTES ==========
-
-@app.route('/register_member', methods=['GET', 'POST'])
-@login_required
-def register_member():
-    if request.method == 'GET':
-        return render_template('register_member.html')
-
-    elif request.method == 'POST':
-        try:
-            full_name = request.form.get('full_name', '').strip()
-            email = request.form.get('email', '').strip()
-            phone = request.form.get('phone', '').strip()
-            address = request.form.get('address', '').strip()
-            nrc_number = request.form.get('nrc_number', '').strip()
-            membership_type = request.form.get('membership_type')
-
-            if not all([full_name, email, phone, address, nrc_number, membership_type]):
-                flash('Please fill in all required fields', 'error')
-                return render_template('register_member.html')
-
-            member_id = generate_member_id()
-            registration_date = datetime.utcnow()
-
-            member = Member(
-                member_id=member_id,
-                full_name=full_name,
-                email=email,
-                phone=phone,
-                address=address,
-                nrc_number=nrc_number,
-                membership_type=membership_type,
-                registration_date=registration_date,
-                status='active'
-            )
-
-            if membership_type == 'monthly':
-                member.expiry_date = registration_date + timedelta(days=30)
-            else:
-                member.expiry_date = registration_date + timedelta(days=180)
-
-            db.session.add(member)
-            db.session.commit()
-
-            flash(
-                f'Member registered successfully! Member ID: {member.member_id}', 'success')
-            return redirect(url_for('view_members'))
-
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error registering member: {str(e)}', 'error')
-            return render_template('register_member.html')
 
 
 # Initialize database when app starts
