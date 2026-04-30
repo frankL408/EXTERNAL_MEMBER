@@ -204,15 +204,55 @@ def dashboard():
             Member.status == 'expired').count()
         current_in_library = CurrentSession.query.count()
 
+        # Get recent members for dashboard display
+        members = Member.query.order_by(
+            Member.registration_date.desc()).limit(10).all()
+
+        # Calculate revenue stats
+        payments = Payment.query.all()
+        monthly_revenue = 0
+        six_months_revenue = 0
+        total_revenue = 0
+
+        for payment in payments:
+            fee_breakdown = payment.get_fee_breakdown()
+            if fee_breakdown.get('membership_type') == 'monthly':
+                monthly_revenue += payment.amount
+            elif fee_breakdown.get('membership_type') == 'six_months':
+                six_months_revenue += payment.amount
+            total_revenue += payment.amount
+
+        # Get membership type counts
+        monthly_members = Member.query.filter_by(
+            membership_type='monthly').count()
+        six_months_members = Member.query.filter_by(
+            membership_type='six_months').count()
+
         return render_template('dashboard.html',
                                total_members=total_members,
                                active_members=active_members,
                                expired_members=expired_members,
-                               current_in_library=current_in_library)
+                               current_in_library=current_in_library,
+                               members=members,
+                               monthly_members=monthly_members,
+                               six_months_members=six_months_members,
+                               monthly_revenue=monthly_revenue,
+                               six_months_revenue=six_months_revenue,
+                               total_revenue=total_revenue)
     except Exception as e:
         print(f"❌ Dashboard error: {e}")
-        return render_template('dashboard.html', total_members=0, active_members=0,
-                               expired_members=0, current_in_library=0)
+        traceback.print_exc()
+        return render_template('dashboard.html',
+                               total_members=0,
+                               active_members=0,
+                               expired_members=0,
+                               current_in_library=0,
+                               members=[],
+                               monthly_members=0,
+                               six_months_members=0,
+                               monthly_revenue=0,
+                               six_months_revenue=0,
+                               total_revenue=0)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -248,6 +288,15 @@ def logout():
 @login_required
 def scan_member():
     return render_template('scan_member.html')
+
+
+# ========== ACCESS LOGS PAGE ROUTE ==========
+
+@app.route('/access_logs')
+@login_required
+def access_logs():
+    """View access logs page"""
+    return render_template('access_logs.html')
 
 
 # ========== CALENDAR ROUTES ==========
