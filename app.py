@@ -174,6 +174,12 @@ def init_database():
             else:
                 print("✅ Admin user already exists")
 
+            # Check if upload folder exists
+            if not os.path.exists(app.config['UPLOAD_FOLDER']):
+                os.makedirs(app.config['UPLOAD_FOLDER'])
+                print(
+                    f"✅ Created upload folder: {app.config['UPLOAD_FOLDER']}")
+
             return True
     except Exception as e:
         print(f"❌ Database initialization error: {e}")
@@ -181,11 +187,32 @@ def init_database():
 
 
 # Utility Functions
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def resize_image(image_path, output_size=(150, 150)):
+    """Resize image to specified dimensions"""
+    try:
+        with PILImage.open(image_path) as img:
+            # Convert to RGB if necessary
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+            img.thumbnail(output_size, PILImage.Resampling.LANCZOS)
+
+            # Create a new image with the exact dimensions
+            new_img = PILImage.new('RGB', output_size, (255, 255, 255))
+            # Paste the resized image centered
+            offset = ((output_size[0] - img.size[0]) //
+                      2, (output_size[1] - img.size[1]) // 2)
+            new_img.paste(img, offset)
+            new_img.save(image_path, 'JPEG', quality=85)
+            print(f"✅ Image resized and saved to: {image_path}")
+    except Exception as e:
+        print(f"⚠️ Could not resize image: {e}")
 
 
 def generate_member_id():
@@ -595,6 +622,17 @@ def register_member():
                         app.config['UPLOAD_FOLDER'], photo_filename)
                     photo_file.save(photo_path)
 
+                    # Resize the image to standard size
+                    try:
+                        resize_image(photo_path, output_size=(150, 150))
+                        print(f"✅ Photo resized and saved: {photo_filename}")
+                    except Exception as resize_error:
+                        print(f"⚠️ Could not resize photo: {resize_error}")
+                else:
+                    flash(
+                        'Invalid file type. Please upload PNG, JPG, or JPEG images only.', 'error')
+                    return render_template('register_member.html')
+
             # Create member
             member = Member(
                 member_id=member_id,
@@ -686,6 +724,7 @@ def edit_member(member_id):
             photo_file = request.files.get('photo')
             if photo_file and photo_file.filename:
                 if allowed_file(photo_file.filename):
+                    # Delete old photo if exists
                     if member.photo_path:
                         old_photo_path = os.path.join(
                             app.config['UPLOAD_FOLDER'], member.photo_path)
@@ -698,6 +737,13 @@ def edit_member(member_id):
                     photo_path = os.path.join(
                         app.config['UPLOAD_FOLDER'], photo_filename)
                     photo_file.save(photo_path)
+
+                    # Resize the image
+                    try:
+                        resize_image(photo_path, output_size=(150, 150))
+                    except Exception as resize_error:
+                        print(f"⚠️ Could not resize photo: {resize_error}")
+
                     member.photo_path = photo_filename
 
             db.session.commit()
@@ -884,11 +930,18 @@ def api_scan_rfid():
             db.session.add(log)
             db.session.commit()
 
+            # Get photo URL
+            photo_url = None
+            if member.photo_path:
+                photo_url = url_for(
+                    'static', filename=f'uploads/{member.photo_path}', _external=True)
+
             return jsonify({
                 'success': False,
                 'is_expired': True,
                 'member_id': member.member_id,
                 'full_name': member.full_name,
+                'photo_path': photo_url,
                 'message': 'ACCESS DENIED: Your membership has expired. Please renew.',
                 'expiry_date': member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else None
             }), 403
@@ -896,6 +949,12 @@ def api_scan_rfid():
         # Check current session
         current_session = CurrentSession.query.filter_by(
             member_id=member.id).first()
+
+        # Get photo URL
+        photo_url = None
+        if member.photo_path:
+            photo_url = url_for(
+                'static', filename=f'uploads/{member.photo_path}', _external=True)
 
         if current_session:
             # Check out
@@ -918,8 +977,12 @@ def api_scan_rfid():
                 'action': 'check_out',
                 'member_id': member.member_id,
                 'full_name': member.full_name,
+                'photo_path': photo_url,
+                'rfid_uid': member.rfid_uid,
                 'message': f'Goodbye {member.full_name}! Checked out successfully.',
-                'duration_minutes': duration_minutes
+                'duration_minutes': duration_minutes,
+                'check_in_time': current_session.check_in_time.strftime('%I:%M %p'),
+                'check_out_time': check_out_time.strftime('%I:%M %p')
             })
         else:
             # Check in
@@ -940,9 +1003,13 @@ def api_scan_rfid():
                 'action': 'check_in',
                 'member_id': member.member_id,
                 'full_name': member.full_name,
-                'message': f'Welcome {member.full_name}! Checked in successfully.',
+                'photo_path': photo_url,
+                'rfid_uid': member.rfid_uid,
+                'membership_type': member.membership_type,
                 'expiry_date': member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else None,
-                'days_remaining': days_remaining
+                'days_remaining': days_remaining,
+                'message': f'Welcome {member.full_name}! Checked in successfully.',
+                'check_in_time': datetime.utcnow().strftime('%I:%M %p')
             })
 
     except Exception as e:
@@ -1028,6 +1095,7 @@ def api_search_members():
                 'member_id': member.member_id,
                 'full_name': member.full_name,
                 'nrc_number': member.nrc_number,
+                'photo_path': member.photo_path,
                 'rfid_assigned': bool(member.rfid_uid)
             })
 

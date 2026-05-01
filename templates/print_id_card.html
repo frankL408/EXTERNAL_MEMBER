@@ -69,8 +69,7 @@
             transition: transform 0.2s;
         }
 
-        /* ===== FRONT SIDE ELEMENTS (REDUCED MARGINS, COMPACT) ===== */
-        /* Top header ribbon - dark blue */
+        /* ===== FRONT SIDE ELEMENTS ===== */
         .card-top-ribbon {
             background: linear-gradient(98deg, #0B1E4E 0%, #1E3A8A 100%);
             padding: 8px 18px;
@@ -90,7 +89,6 @@
             text-transform: uppercase;
         }
 
-        /* Member type badge - shifted left, small but elegant */
         .member-type-section {
             padding: 5px 18px 0 18px;
             text-align: left;
@@ -110,7 +108,39 @@
             backdrop-filter: blur(2px);
         }
 
-        /* Logo area - reduced spacing */
+        /* Photo section - NEW */
+        .member-photo-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0 5px 0;
+        }
+
+        .member-photo {
+            width: 100px;
+            height: 100px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 3px solid #FFC107;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .member-photo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .member-photo-placeholder {
+            font-size: 50px;
+            color: #adb5bd;
+        }
+
+        /* Logo area */
         .logo-container {
             display: flex;
             justify-content: center;
@@ -130,7 +160,7 @@
             height: 60px;
         }
 
-        /* Member Details - clean compact layout - PLAN & EXPIRY REMOVED */
+        /* Member Details */
         .card-details {
             padding: 5px 20px 16px 20px;
         }
@@ -182,7 +212,6 @@
             text-align: right;
         }
 
-        /* fingerprint / chip icon at bottom */
         .card-footer-icon {
             text-align: center;
             margin-top: 6px;
@@ -195,7 +224,7 @@
             border-top: 1px solid #f0f2f5;
         }
 
-        /* ===== BACK SIDE (property & contact) elegant ===== */
+        /* ===== BACK SIDE ===== */
         .back-side-container {
             display: flex;
             flex-direction: column;
@@ -353,7 +382,6 @@
             }
         }
 
-        /* Responsive for mobile/tablet */
         @media (max-width: 550px) {
             .print-id-card {
                 width: 95% !important;
@@ -381,9 +409,13 @@
                 padding: 6px 16px;
                 font-size: 11px;
             }
+
+            .member-photo {
+                width: 70px;
+                height: 70px;
+            }
         }
 
-        /* Additional subtle effect */
         .print-id-card-front,
         .print-id-card-back {
             transition: all 0.2s ease;
@@ -404,7 +436,7 @@
     </div>
 
     <div class="id-card-wrapper">
-        <!-- ==================== FRONT SIDE – PLAN & EXPIRY REMOVED ==================== -->
+        <!-- ==================== FRONT SIDE ==================== -->
         <div class="print-front-page">
             <div class="print-id-card">
                 <div class="print-id-card-front">
@@ -413,7 +445,7 @@
                         <div class="uni-name">ZCAS UNIVERSITY</div>
                     </div>
 
-                    <!-- Member type badge - simplified (removed membership_type reference) -->
+                    <!-- Member type badge -->
                     <div class="member-type-section">
                         <div class="member-badge">
                             <i class="fas fa-microchip"></i>
@@ -421,7 +453,7 @@
                         </div>
                     </div>
 
-                    <!-- Logo – well proportioned -->
+                    <!-- Logo -->
                     <div class="logo-container">
                         <img src="{{ url_for('static', filename='images/logo.png') }}" class="uni-logo" alt="ZCAS Crest"
                             onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.logo-fallback-alt').style.display='flex';">
@@ -436,7 +468,20 @@
                         </div>
                     </div>
 
-                    <!-- Member data area – PLAN and EXPIRY DATE completely removed -->
+                    <!-- Member Photo - NEW SECTION -->
+                    <div class="member-photo-section">
+                        <div class="member-photo">
+                            {% if member.photo_path %}
+                            <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
+                                class="member-photo-img" alt="Member Photo"
+                                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle member-photo-placeholder\'></i>';">
+                            {% else %}
+                            <i class="fas fa-user-circle member-photo-placeholder"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Member data area -->
                     <div class="card-details">
                         <div class="divider-light"></div>
                         <div class="member-fullname">{{ member.full_name | upper }}</div>
@@ -451,8 +496,6 @@
                                 <span class="info-value">{{ member.nrc_number }}</span>
                             </div>
                             {% endif %}
-                            <!-- REMOVED: PLAN (membership_type) row -->
-                            <!-- REMOVED: EXPIRY DATE row -->
                         </div>
                         <div class="card-footer-icon">
                             <span><i class="fas fa-fingerprint"></i> RFID ready</span>
@@ -463,7 +506,7 @@
             </div>
         </div>
 
-        <!-- ==================== BACK SIDE – refined, property notice ==================== -->
+        <!-- ==================== BACK SIDE ==================== -->
         <div class="print-back-page">
             <div class="print-id-card">
                 <div class="print-id-card-back">
@@ -519,8 +562,19 @@
                 }
             }
 
-            // Additional print optimizations
-            console.log("✅ ZCAS ID Card – PLAN and EXPIRY DATE removed. Clean external ID layout.");
+            // Member photo fallback handling
+            const memberPhoto = document.querySelector('.member-photo-img');
+            if (memberPhoto) {
+                memberPhoto.onerror = function () {
+                    this.style.display = 'none';
+                    const parent = this.parentElement;
+                    if (parent) {
+                        parent.innerHTML = '<i class="fas fa-user-circle member-photo-placeholder"></i>';
+                    }
+                };
+            }
+
+            console.log("✅ ZCAS ID Card – Member photo added and visible.");
 
             const style = document.createElement('style');
             style.textContent = `
@@ -549,6 +603,10 @@
                 }
                 .back-side-container {
                     padding: 18px 20px 22px !important;
+                }
+                .member-photo-img {
+                    print-color-adjust: exact;
+                    -webkit-print-color-adjust: exact;
                 }
             }
         `;
