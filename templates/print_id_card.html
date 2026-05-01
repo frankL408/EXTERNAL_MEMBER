@@ -18,7 +18,7 @@
             background: #eef2f5;
             font-family: 'Segoe UI', 'Roboto', 'Inter', 'Helvetica Neue', sans-serif;
             margin: 0;
-            padding: 30px 20px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -31,48 +31,49 @@
             margin: 0 auto;
         }
 
-        /* Each side on separate page when printed */
+        /* Each side on separate page when printed - FULL PAGE */
         .print-front-page,
         .print-back-page {
             page-break-after: always;
             page-break-inside: avoid;
             break-inside: avoid;
             margin: 0;
-            padding: 20px 0;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #eef2f5;
+            background: white;
+            min-height: 100vh;
+            width: 100%;
         }
 
-        /* ID CARD - Reduced margins, compact premium size */
+        /* ID CARD - Standard CR80 size for printing */
         .print-id-card {
-            width: 290pt !important;
-            max-width: 320pt;
+            width: 100%;
+            max-width: 100%;
             background: transparent !important;
-            margin: 4px auto;
+            margin: 0;
             break-inside: avoid;
             page-break-inside: avoid;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
-            border-radius: 16px;
+            box-shadow: none;
+            border-radius: 0;
         }
 
-        /* Card surfaces */
+        /* Card surfaces - FULL WIDTH */
         .print-id-card-front,
         .print-id-card-back {
             width: 100%;
             background: white;
-            border-radius: 16px;
             overflow: hidden;
             position: relative;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: none;
             transition: transform 0.2s;
         }
 
         /* ===== FRONT SIDE ELEMENTS ===== */
         .card-top-ribbon {
             background: linear-gradient(98deg, #0B1E4E 0%, #1E3A8A 100%);
-            padding: 8px 18px;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -81,7 +82,7 @@
         }
 
         .uni-name {
-            font-size: 15pt;
+            font-size: 18pt;
             font-weight: 800;
             color: white;
             letter-spacing: 1px;
@@ -92,26 +93,28 @@
         /* Main content area with photo on left and details on right */
         .card-main-content {
             display: flex;
-            padding: 15px 18px;
-            gap: 15px;
+            padding: 20px 25px;
+            gap: 25px;
+            width: 100%;
         }
 
-        /* Left side - Member Photo (no yellow ring) */
+        /* Left side - Member Photo (NO yellow ring/border) */
         .member-photo-left {
             flex-shrink: 0;
-            width: 100px;
+            width: 130px;
         }
 
         .member-photo {
-            width: 100px;
-            height: 100px;
+            width: 130px;
+            height: 130px;
             background: #f0f0f0;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            /* Removed border: 3px solid #FFC107 */
         }
 
         .member-photo-img {
@@ -121,7 +124,7 @@
         }
 
         .member-photo-placeholder {
-            font-size: 50px;
+            font-size: 65px;
             color: #adb5bd;
         }
 
@@ -131,30 +134,30 @@
         }
 
         .member-fullname {
-            font-size: 12pt;
+            font-size: 16pt;
             font-weight: 800;
             color: #0A2540;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             letter-spacing: -0.2px;
             font-family: 'Inter', sans-serif;
             text-transform: uppercase;
-            border-left: 3px solid #FFC107;
-            padding-left: 8px;
+            border-left: 4px solid #FFC107;
+            padding-left: 12px;
         }
 
         .info-grid {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 10px;
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            font-size: 8pt;
-            padding: 2px 0;
-            border-bottom: 1px dashed #e9eef3;
+            font-size: 10pt;
+            padding: 4px 0;
+            border-bottom: 1px solid #e9eef3;
         }
 
         .info-label {
@@ -170,19 +173,19 @@
             text-align: right;
         }
 
-        /* Member type badge - moved to top of right side */
+        /* Member type badge */
         .member-badge {
             display: inline-flex;
             align-items: center;
             gap: 5px;
             background: rgba(30, 58, 138, 0.12);
-            padding: 3px 10px;
+            padding: 5px 12px;
             border-radius: 40px;
-            font-size: 7pt;
+            font-size: 9pt;
             font-weight: 700;
             color: #1E3A8A;
             letter-spacing: 0.4px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         /* Logo section - centered */
@@ -190,7 +193,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 5px 0;
+            margin: 10px 0;
         }
 
         .logo-container {
@@ -199,33 +202,33 @@
             align-items: center;
             background: white;
             border-radius: 50%;
-            width: 55px;
-            height: 55px;
+            width: 70px;
+            height: 70px;
         }
 
         .uni-logo {
-            width: 50px;
-            height: 50px;
+            width: 65px;
+            height: 65px;
             object-fit: contain;
         }
 
         .divider-light {
-            height: 1px;
-            background: linear-gradient(90deg, #cbd5e1, #94a3b8, #cbd5e1);
-            margin: 8px 0;
+            height: 2px;
+            background: linear-gradient(90deg, #cbd5e1, #1E3A8A, #cbd5e1);
+            margin: 5px 0;
             width: 100%;
         }
 
         /* Card footer icons */
         .card-footer-icon {
             text-align: center;
-            margin-top: 8px;
-            font-size: 7pt;
-            color: #94a3b8;
+            margin-top: 10px;
+            font-size: 9pt;
+            color: #6c757d;
             display: flex;
             justify-content: center;
-            gap: 12px;
-            padding: 6px 0 0 0;
+            gap: 20px;
+            padding: 10px 0 15px 0;
             border-top: 1px solid #f0f2f5;
         }
 
@@ -235,13 +238,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 24px 24px 28px 24px;
+            padding: 30px 30px 40px 30px;
             background: white;
-            min-height: 210px;
+            width: 100%;
+            min-height: 350px;
         }
 
         .back-title {
-            font-size: 9.5pt;
+            font-size: 12pt;
             font-weight: 800;
             color: #1E3A8A;
             text-transform: uppercase;
@@ -250,16 +254,16 @@
             background: #EEF2FF;
             display: inline-block;
             width: auto;
-            padding: 6px 16px;
+            padding: 8px 20px;
             border-radius: 40px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .back-icon-divider {
-            width: 48px;
+            width: 60px;
             height: 3px;
             background: #FFC107;
-            margin: 8px auto 15px auto;
+            margin: 10px auto 20px auto;
             border-radius: 4px;
         }
 
@@ -267,49 +271,49 @@
             width: 100%;
             text-align: center;
             background: #F8FAFE;
-            padding: 12px 12px;
+            padding: 20px;
             border-radius: 24px;
-            margin: 5px 0;
+            margin: 10px 0;
         }
 
         .contact-line {
-            font-size: 7.8pt;
+            font-size: 10pt;
             color: #2c3e66;
-            margin: 6px 0;
+            margin: 8px 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
         .contact-line i {
             color: #1E3A8A;
-            width: 22px;
-            font-size: 9pt;
+            width: 25px;
+            font-size: 11pt;
         }
 
         .phone-emphasis {
             font-weight: 800;
             color: #0e2b5e;
-            font-size: 9pt;
+            font-size: 11pt;
         }
 
         .back-footer-note {
-            font-size: 6.5pt;
+            font-size: 8pt;
             color: #5b6e8c;
             text-align: center;
-            margin-top: 18px;
+            margin-top: 20px;
             border-top: 1px solid #e2e8f0;
-            padding-top: 12px;
+            padding-top: 15px;
             width: 100%;
         }
 
         /* Print button */
         .print-actions {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
+            bottom: 20px;
+            right: 20px;
             z-index: 1000;
             display: flex;
             gap: 12px;
@@ -321,10 +325,10 @@
             background: linear-gradient(105deg, #0B1E4E, #1E3A8A);
             border: none;
             border-radius: 60px;
-            padding: 10px 24px;
+            padding: 12px 28px;
             color: white;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 14px;
             cursor: pointer;
             box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
             transition: all 0.2s;
@@ -341,17 +345,23 @@
 
         .print-hint-tag {
             background: rgba(255, 255, 240, 0.95);
-            padding: 5px 14px;
+            padding: 6px 16px;
             border-radius: 60px;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 600;
             color: #0B1E4E;
             backdrop-filter: blur(4px);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* Print Media */
+        /* Print Media - Fills entire ID card without spaces */
         @media print {
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
             body {
                 background: white;
                 margin: 0;
@@ -368,67 +378,35 @@
                 padding: 0;
                 break-inside: avoid;
                 page-break-after: always;
+                page-break-inside: avoid;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .print-id-card {
                 box-shadow: none;
-                margin: 0 auto;
-                width: 270pt;
+                margin: 0;
+                width: 100%;
+                max-width: 100%;
             }
 
             .print-id-card-front,
             .print-id-card-back {
                 box-shadow: none;
                 break-inside: avoid;
+                page-break-inside: avoid;
             }
 
             .uni-logo {
                 filter: none;
             }
-        }
 
-        @media (max-width: 550px) {
-            .print-id-card {
-                width: 95% !important;
+            .card-top-ribbon {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
             }
-
-            .uni-name {
-                font-size: 13pt;
-            }
-
-            .member-fullname {
-                font-size: 10pt;
-            }
-
-            .card-main-content {
-                padding: 10px;
-                gap: 10px;
-            }
-
-            .member-photo-left {
-                width: 70px;
-            }
-
-            .member-photo {
-                width: 70px;
-                height: 70px;
-            }
-
-            .print-actions {
-                bottom: 16px;
-                right: 16px;
-                gap: 8px;
-            }
-
-            .btn-print-card {
-                padding: 6px 16px;
-                font-size: 11px;
-            }
-        }
-
-        .print-id-card-front,
-        .print-id-card-back {
-            transition: all 0.2s ease;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -463,7 +441,7 @@
                                 onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.logo-fallback-alt').style.display='flex';">
                             <div class="logo-fallback-alt"
                                 style="display: none; align-items:center; justify-content:center;">
-                                <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="65" height="65" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                                     <rect width="100" height="100" rx="18" fill="#1E3A8A" />
                                     <circle cx="50" cy="50" r="32" fill="#FFC107" />
                                     <text x="50" y="68" font-size="44" text-anchor="middle" fill="#0B1E4E"
@@ -477,7 +455,7 @@
 
                     <!-- Main Content: Photo Left + Details Right -->
                     <div class="card-main-content">
-                        <!-- Left side - Member Photo (no yellow border) -->
+                        <!-- Left side - Member Photo (No yellow ring/ribbon) -->
                         <div class="member-photo-left">
                             <div class="member-photo">
                                 {% if member.photo_path %}
@@ -490,7 +468,7 @@
                             </div>
                         </div>
 
-                        <!-- Right side - Member Details (no expiry date) -->
+                        <!-- Right side - Member Details -->
                         <div class="member-info-right">
                             <div class="member-badge">
                                 <i class="fas fa-microchip"></i>
@@ -555,7 +533,7 @@
                             UNIVERSITY<br>
                             If found, please return to any library desk or call security.
                         </div>
-                        <div style="margin-top: 10px; font-size:6pt; color:#8ba0bc; text-align:center;">
+                        <div style="margin-top: 15px; font-size:8pt; color:#8ba0bc; text-align:center;">
                             <i class="fas fa-microchip"></i> Authorized RFID | Duress verification enabled
                         </div>
                     </div>
@@ -591,42 +569,30 @@
                 };
             }
 
-            console.log("✅ ZCAS ID Card – Photo on left (no yellow ring), logo centered, expiry date removed.");
+            console.log("✅ ZCAS ID Card – Yellow ring/ribbon removed from photo.");
 
+            // Additional print optimization
             const style = document.createElement('style');
             style.textContent = `
-            @media print {
-                .print-id-card {
-                    margin: 0pt auto !important;
-                    page-break-after: avoid;
-                    page-break-inside: avoid;
+                @media print {
+                    @page {
+                        margin: 0;
+                        size: auto;
+                    }
+                    html, body {
+                        margin: 0;
+                        padding: 0;
+                        width: 100%;
+                        height: 100%;
+                    }
+                    .print-front-page, .print-back-page {
+                        margin: 0;
+                        padding: 0;
+                        width: 100%;
+                        height: 100%;
+                    }
                 }
-                .print-front-page, .print-back-page {
-                    padding: 0;
-                    margin: 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    min-height: 100vh;
-                }
-                body {
-                    background: white;
-                }
-                .card-details {
-                    padding: 4px 18px 12px 18px !important;
-                }
-                .member-fullname {
-                    margin-bottom: 8px;
-                }
-                .back-side-container {
-                    padding: 18px 20px 22px !important;
-                }
-                .member-photo-img {
-                    print-color-adjust: exact;
-                    -webkit-print-color-adjust: exact;
-                }
-            }
-        `;
+            `;
             document.head.appendChild(style);
         })();
     </script>
