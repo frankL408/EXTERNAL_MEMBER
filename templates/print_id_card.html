@@ -45,7 +45,7 @@
             background: #eef2f5;
         }
 
-        /* ID CARD - Reduced margins, compact premium size (CR80-like) */
+        /* ID CARD - Reduced margins, compact premium size */
         .print-id-card {
             width: 290pt !important;
             max-width: 320pt;
@@ -89,31 +89,17 @@
             text-transform: uppercase;
         }
 
-        .member-type-section {
-            padding: 5px 18px 0 18px;
-            text-align: left;
-        }
-
-        .member-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(30, 58, 138, 0.12);
-            padding: 4px 14px;
-            border-radius: 40px;
-            font-size: 7.5pt;
-            font-weight: 700;
-            color: #1E3A8A;
-            letter-spacing: 0.4px;
-            backdrop-filter: blur(2px);
-        }
-
-        /* Photo section - NEW */
-        .member-photo-section {
+        /* Main content area with photo on left and details on right */
+        .card-main-content {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 10px 0 5px 0;
+            padding: 15px 18px;
+            gap: 15px;
+        }
+
+        /* Left side - Member Photo (no yellow ring) */
+        .member-photo-left {
+            flex-shrink: 0;
+            width: 100px;
         }
 
         .member-photo {
@@ -125,7 +111,6 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border: 3px solid #FFC107;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
@@ -140,61 +125,34 @@
             color: #adb5bd;
         }
 
-        /* Logo area */
-        .logo-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 8px 0 4px 0;
-        }
-
-        .uni-logo {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-        }
-
-        .logo-fallback-svg {
-            width: 60px;
-            height: 60px;
-        }
-
-        /* Member Details */
-        .card-details {
-            padding: 5px 20px 16px 20px;
-        }
-
-        .divider-light {
-            height: 1.5px;
-            background: linear-gradient(90deg, #cbd5e1, #94a3b8, #cbd5e1);
-            margin: 6px 0 10px 0;
-            width: 100%;
+        /* Right side - Member Details */
+        .member-info-right {
+            flex: 1;
         }
 
         .member-fullname {
-            font-size: 13pt;
+            font-size: 12pt;
             font-weight: 800;
             color: #0A2540;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             letter-spacing: -0.2px;
             font-family: 'Inter', sans-serif;
             text-transform: uppercase;
             border-left: 3px solid #FFC107;
-            padding-left: 10px;
+            padding-left: 8px;
         }
 
         .info-grid {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            font-size: 8.8pt;
+            font-size: 8pt;
             padding: 2px 0;
             border-bottom: 1px dashed #e9eef3;
         }
@@ -212,15 +170,62 @@
             text-align: right;
         }
 
+        /* Member type badge - moved to top of right side */
+        .member-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(30, 58, 138, 0.12);
+            padding: 3px 10px;
+            border-radius: 40px;
+            font-size: 7pt;
+            font-weight: 700;
+            color: #1E3A8A;
+            letter-spacing: 0.4px;
+            margin-bottom: 10px;
+        }
+
+        /* Logo section - centered */
+        .logo-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+        }
+
+        .uni-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .divider-light {
+            height: 1px;
+            background: linear-gradient(90deg, #cbd5e1, #94a3b8, #cbd5e1);
+            margin: 8px 0;
+            width: 100%;
+        }
+
+        /* Card footer icons */
         .card-footer-icon {
             text-align: center;
-            margin-top: 6px;
-            font-size: 8pt;
+            margin-top: 8px;
+            font-size: 7pt;
             color: #94a3b8;
             display: flex;
             justify-content: center;
-            gap: 15px;
-            padding: 4px 0 0 0;
+            gap: 12px;
+            padding: 6px 0 0 0;
             border-top: 1px solid #f0f2f5;
         }
 
@@ -392,11 +397,21 @@
             }
 
             .member-fullname {
-                font-size: 11pt;
+                font-size: 10pt;
             }
 
-            .card-details {
-                padding: 5px 14px 16px;
+            .card-main-content {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .member-photo-left {
+                width: 70px;
+            }
+
+            .member-photo {
+                width: 70px;
+                height: 70px;
             }
 
             .print-actions {
@@ -408,11 +423,6 @@
             .btn-print-card {
                 padding: 6px 16px;
                 font-size: 11px;
-            }
-
-            .member-photo {
-                width: 70px;
-                height: 70px;
             }
         }
 
@@ -445,62 +455,69 @@
                         <div class="uni-name">ZCAS UNIVERSITY</div>
                     </div>
 
-                    <!-- Member type badge -->
-                    <div class="member-type-section">
-                        <div class="member-badge">
-                            <i class="fas fa-microchip"></i>
-                            LIBRARY ACCESS CARD
-                        </div>
-                    </div>
-
-                    <!-- Logo -->
-                    <div class="logo-container">
-                        <img src="{{ url_for('static', filename='images/logo.png') }}" class="uni-logo" alt="ZCAS Crest"
-                            onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.logo-fallback-alt').style.display='flex';">
-                        <div class="logo-fallback-alt"
-                            style="display: none; align-items:center; justify-content:center;">
-                            <svg width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="100" height="100" rx="18" fill="#1E3A8A" />
-                                <circle cx="50" cy="50" r="32" fill="#FFC107" />
-                                <text x="50" y="68" font-size="44" text-anchor="middle" fill="#0B1E4E" font-weight="900"
-                                    font-family="Arial">Z</text>
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- Member Photo - NEW SECTION -->
-                    <div class="member-photo-section">
-                        <div class="member-photo">
-                            {% if member.photo_path %}
-                            <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
-                                class="member-photo-img" alt="Member Photo"
-                                onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle member-photo-placeholder\'></i>';">
-                            {% else %}
-                            <i class="fas fa-user-circle member-photo-placeholder"></i>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Member data area -->
-                    <div class="card-details">
-                        <div class="divider-light"></div>
-                        <div class="member-fullname">{{ member.full_name | upper }}</div>
-                        <div class="info-grid">
-                            <div class="info-row">
-                                <span class="info-label"><i class="fas fa-qrcode"></i> MEMBER ID</span>
-                                <span class="info-value">{{ member.member_id }}</span>
+                    <!-- Logo Section - Centered -->
+                    <div class="logo-section">
+                        <div class="logo-container">
+                            <img src="{{ url_for('static', filename='images/logo.png') }}" class="uni-logo"
+                                alt="ZCAS Crest"
+                                onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.logo-fallback-alt').style.display='flex';">
+                            <div class="logo-fallback-alt"
+                                style="display: none; align-items:center; justify-content:center;">
+                                <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="100" height="100" rx="18" fill="#1E3A8A" />
+                                    <circle cx="50" cy="50" r="32" fill="#FFC107" />
+                                    <text x="50" y="68" font-size="44" text-anchor="middle" fill="#0B1E4E"
+                                        font-weight="900" font-family="Arial">Z</text>
+                                </svg>
                             </div>
-                            {% if member.nrc_number and member.nrc_number != 'None' %}
-                            <div class="info-row">
-                                <span class="info-label"><i class="fas fa-passport"></i> NRC / PASSPORT</span>
-                                <span class="info-value">{{ member.nrc_number }}</span>
+                        </div>
+                    </div>
+
+                    <div class="divider-light"></div>
+
+                    <!-- Main Content: Photo Left + Details Right -->
+                    <div class="card-main-content">
+                        <!-- Left side - Member Photo (no yellow border) -->
+                        <div class="member-photo-left">
+                            <div class="member-photo">
+                                {% if member.photo_path %}
+                                <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
+                                    class="member-photo-img" alt="Member Photo"
+                                    onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-user-circle member-photo-placeholder\'></i>';">
+                                {% else %}
+                                <i class="fas fa-user-circle member-photo-placeholder"></i>
+                                {% endif %}
                             </div>
-                            {% endif %}
                         </div>
-                        <div class="card-footer-icon">
-                            <span><i class="fas fa-fingerprint"></i> RFID ready</span>
-                            <span><i class="fas fa-shield-alt"></i> verified</span>
+
+                        <!-- Right side - Member Details (no expiry date) -->
+                        <div class="member-info-right">
+                            <div class="member-badge">
+                                <i class="fas fa-microchip"></i>
+                                LIBRARY ACCESS CARD
+                            </div>
+                            <div class="member-fullname">{{ member.full_name | upper }}</div>
+                            <div class="info-grid">
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-qrcode"></i> MEMBER ID</span>
+                                    <span class="info-value">{{ member.member_id }}</span>
+                                </div>
+                                {% if member.nrc_number and member.nrc_number != 'None' %}
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-passport"></i> NRC / PASSPORT</span>
+                                    <span class="info-value">{{ member.nrc_number }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="divider-light"></div>
+
+                    <!-- Footer icons -->
+                    <div class="card-footer-icon">
+                        <span><i class="fas fa-fingerprint"></i> RFID ready</span>
+                        <span><i class="fas fa-shield-alt"></i> verified</span>
                     </div>
                 </div>
             </div>
@@ -574,7 +591,7 @@
                 };
             }
 
-            console.log("✅ ZCAS ID Card – Member photo added and visible.");
+            console.log("✅ ZCAS ID Card – Photo on left (no yellow ring), logo centered, expiry date removed.");
 
             const style = document.createElement('style');
             style.textContent = `
