@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Reports - ZCAS University Library{% endblock %}
+{% block title %}Member Details - {{ member.full_name }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,68 +8,120 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-chart-bar"></i> Library Reports</h4>
+                    <h4 class="mb-0"><i class="fas fa-user"></i> Member Details</h4>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header bg-success text-white">
-                                    <h5>Membership Statistics</h5>
+                        <div class="col-md-3 text-center">
+                            {% if member.photo_path %}
+                            <img src="{{ url_for('static', filename='uploads/' + member.photo_path) }}"
+                                alt="Member Photo" class="img-fluid rounded-circle mb-3"
+                                style="width: 150px; height: 150px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
+                                style="width: 150px; height: 150px;">
+                                <i class="fas fa-user fa-4x"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Member ID:</strong> {{ member.member_id }}</p>
+                                    <p><strong>Full Name:</strong> {{ member.full_name }}</p>
+                                    <p><strong>Email:</strong> {{ member.email }}</p>
+                                    <p><strong>Phone:</strong> {{ member.phone }}</p>
+                                    <p><strong>NRC Number:</strong> {{ member.nrc_number }}</p>
                                 </div>
-                                <div class="card-body">
-                                    <table class="table">
-                                        <tr>
-                                            <td>Total Members:</td>
-                                            <td><strong>{{ total_members }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Active Members:</td>
-                                            <td><strong class="text-success">{{ active_members }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Expired Members:</td>
-                                            <td><strong class="text-danger">{{ expired_members }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Monthly Plan:</td>
-                                            <td><strong>{{ monthly_members }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Six Months Plan:</td>
-                                            <td><strong>{{ six_months_members }}</strong></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Recent Registrations (30 days):</td>
-                                            <td><strong>{{ recent_registrations }}</strong></td>
-                                        </tr>
-                                    </table>
+                                <div class="col-md-6">
+                                    <p><strong>Membership Type:</strong> {{ member.membership_type|upper }}</p>
+                                    <p><strong>Status:</strong>
+                                        {% if member.status == 'active' %}
+                                        <span class="badge bg-success">ACTIVE</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">EXPIRED</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Registration Date:</strong> {{
+                                        member.registration_date.strftime('%Y-%m-%d') if member.registration_date else
+                                        'N/A' }}</p>
+                                    <p><strong>Expiry Date:</strong> {{ member.expiry_date.strftime('%Y-%m-%d') if
+                                        member.expiry_date else 'N/A' }}</p>
+                                    <p><strong>RFID Card:</strong>
+                                        {% if member.rfid_uid %}
+                                        <span class="badge bg-success">Assigned</span>
+                                        <code>{{ member.rfid_uid }}</code>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Not Assigned</span>
+                                        {% endif %}
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header bg-warning text-dark">
-                                    <h5>Financial Summary</h5>
-                                </div>
-                                <div class="card-body">
-                                    <table class="table">
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{{ url_for('print_id', member_id=member.id) }}" class="btn btn-info"
+                                    target="_blank">
+                                    <i class="fas fa-id-card"></i> Print ID Card
+                                </a>
+                                <a href="{{ url_for('edit_member', member_id=member.id) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> Edit Member
+                                </a>
+                                <a href="{{ url_for('renew_member', member_id=member.id) }}" class="btn btn-success">
+                                    <i class="fas fa-sync-alt"></i> Renew Membership
+                                </a>
+                                <a href="{{ url_for('view_members') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment History -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5>Payment History</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
                                         <tr>
-                                            <td>Total Revenue:</td>
-                                            <td><strong>K{{ "%.2f"|format(total_revenue) }}</strong></td>
+                                            <th>Quotation #</th>
+                                            <th>Amount</th>
+                                            <th>Method</th>
+                                            <th>Received By</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
                                         </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for payment in payments %}
                                         <tr>
-                                            <td>Monthly Members Revenue:</td>
-                                            <td><strong>K{{ "%.2f"|format(monthly_revenue) if monthly_revenue else
-                                                    "0.00" }}</strong></td>
+                                            <td>{{ payment.receipt_number }}</td>
+                                            <td class="text-end"><strong>K{{ "%.2f"|format(payment.amount) }}</strong>
+                                            </td>
+                                            <td>{{ payment.payment_method }}</td>
+                                            <td>{{ payment.received_by }}</td>
+                                            <td>{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                <a href="{{ url_for('print_quotation', payment_id=payment.id) }}"
+                                                    class="btn btn-sm btn-info" target="_blank">
+                                                    <i class="fas fa-print"></i> Print Quotation
+                                                </a>
+                                            </td>
                                         </tr>
+                                        {% else %}
                                         <tr>
-                                            <td>Six Months Revenue:</td>
-                                            <td><strong>K{{ "%.2f"|format(six_months_revenue) if six_months_revenue else
-                                                    "0.00" }}</strong></td>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                                No payment records found
+                                            </td>
                                         </tr>
-                                    </table>
-                                </div>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>

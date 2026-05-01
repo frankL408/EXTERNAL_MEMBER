@@ -47,12 +47,25 @@ ZCAS_CONTACT = {
     'website': 'www.zcasu.edu.zm'
 }
 
+# Bank Details
+BANK_DETAILS = {
+    'bank_name': 'Zanaco Bank Zambia',
+    'account_name': 'ZCAS University - Library Fees Collection',
+    'account_number': '5823001300137',
+    'branch': 'Lusaka Main Branch',
+    'sort_code': '01-01-01',
+    'swift_code': 'ZANAZMLU'
+}
+
 # Fee Structure
 FEE_STRUCTURE = {
     'id_card': 100,
     'wifi': 120,
     'monthly': 90,
-    'six_months': 500
+    'six_months': 500,
+    'student': 50,
+    'staff': 75,
+    'external': 100
 }
 
 # Ensure upload directory exists
@@ -184,7 +197,46 @@ def generate_member_id():
 def generate_receipt_number():
     timestamp = datetime.now().strftime("%y%m%d")
     random_num = random.randint(1000, 9999)
-    return f"ZCAS-RCPT-{timestamp}-{random_num}"
+    return f"ZCAS-QTN-{timestamp}-{random_num}"
+
+
+def calculate_total_fees(membership_type, duration_months=1):
+    """Calculate total fees based on membership type and duration"""
+    if membership_type == 'monthly':
+        membership_fee = FEE_STRUCTURE['monthly'] * duration_months
+    elif membership_type == 'six_months':
+        membership_fee = FEE_STRUCTURE['six_months']
+        duration_months = 6
+    elif membership_type == 'student':
+        membership_fee = FEE_STRUCTURE['student'] * duration_months
+    elif membership_type == 'staff':
+        membership_fee = FEE_STRUCTURE['staff'] * duration_months
+    else:
+        membership_fee = FEE_STRUCTURE['external'] * duration_months
+
+    id_card_fee = FEE_STRUCTURE['id_card']
+    wifi_fee = FEE_STRUCTURE['wifi']
+
+    total = membership_fee + id_card_fee + wifi_fee
+
+    return {
+        'membership_fee': membership_fee,
+        'id_card_fee': id_card_fee,
+        'wifi_fee': wifi_fee,
+        'total': total,
+        'duration_months': duration_months
+    }
+
+
+@app.context_processor
+def inject_template_vars():
+    return {
+        'bank_details': BANK_DETAILS,
+        'now': datetime.utcnow(),
+        'colors': ZCAS_COLORS,
+        'fee_structure': FEE_STRUCTURE,
+        'contact_info': ZCAS_CONTACT
+    }
 
 
 # ========== CORE ROUTES ==========
@@ -435,9 +487,13 @@ def renew_member(member_id):
                 renewal_fee = FEE_STRUCTURE['monthly'] * duration_months
                 new_expiry = renewal_date + \
                     timedelta(days=30 * duration_months)
-            else:
+            elif renew_period == 'six_months':
                 renewal_fee = FEE_STRUCTURE['six_months']
                 new_expiry = renewal_date + timedelta(days=180)
+            else:
+                renewal_fee = FEE_STRUCTURE['external'] * duration_months
+                new_expiry = renewal_date + \
+                    timedelta(days=30 * duration_months)
 
             member.expiry_date = new_expiry
             member.status = 'active'
@@ -501,14 +557,45 @@ def register_member():
             address = request.form.get('address', '').strip()
             nrc_number = request.form.get('nrc_number', '').strip()
             membership_type = request.form.get('membership_type')
+            duration_months = request.form.get('duration_months', '1')
+            payment_method = request.form.get('payment_method', 'Cash')
+            nationality = request.form.get('nationality', 'Zambian')
 
+            # Validate required fields
             if not all([full_name, email, phone, address, nrc_number, membership_type]):
                 flash('Please fill in all required fields', 'error')
                 return render_template('register_member.html')
 
+            # Convert duration_months to int
+            try:
+                duration_months = int(duration_months)
+                if duration_months < 1:
+                    duration_months = 1
+                elif duration_months > 12:
+                    duration_months = 12
+            except (ValueError, TypeError):
+                duration_months = 1
+
+            # Calculate fees
+            fees = calculate_total_fees(membership_type, duration_months)
+
             member_id = generate_member_id()
             registration_date = datetime.utcnow()
+            receipt_number = generate_receipt_number()
 
+            # Handle photo upload
+            photo_file = request.files.get('photo')
+            photo_filename = None
+            if photo_file and photo_file.filename:
+                if allowed_file(photo_file.filename):
+                    filename = secure_filename(photo_file.filename)
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    photo_filename = f"{timestamp}_{filename}"
+                    photo_path = os.path.join(
+                        app.config['UPLOAD_FOLDER'], photo_filename)
+                    photo_file.save(photo_path)
+
+            # Create member
             member = Member(
                 member_id=member_id,
                 full_name=full_name,
@@ -516,27 +603,151 @@ def register_member():
                 phone=phone,
                 address=address,
                 nrc_number=nrc_number,
+                nationality=nationality,
                 membership_type=membership_type,
+                duration_months=fees['duration_months'],
+                photo_path=photo_filename,
+                receipt_number=receipt_number,
                 registration_date=registration_date,
-                status='active'
+                status='active',
+                rfid_uid=None
             )
 
+            # Set expiry date
             if membership_type == 'monthly':
-                member.expiry_date = registration_date + timedelta(days=30)
-            else:
+                member.expiry_date = registration_date + \
+                    timedelta(days=30 * fees['duration_months'])
+            elif membership_type == 'six_months':
                 member.expiry_date = registration_date + timedelta(days=180)
+            else:
+                member.expiry_date = registration_date + \
+                    timedelta(days=30 * fees['duration_months'])
 
             db.session.add(member)
+            db.session.flush()
+
+            # Create payment record
+            payment = Payment(
+                receipt_number=receipt_number,
+                member_id=member.id,
+                amount=fees['total'],
+                payment_method=payment_method,
+                received_by=current_user.username,
+                payment_date=registration_date
+            )
+
+            payment.set_fee_breakdown({
+                'membership_fee': fees['membership_fee'],
+                'id_card_fee': fees['id_card_fee'],
+                'wifi_fee': fees['wifi_fee'],
+                'duration_months': fees['duration_months'],
+                'membership_type': membership_type,
+                'is_renewal': False
+            })
+
+            db.session.add(payment)
             db.session.commit()
 
+            duration_text = f"{fees['duration_months']} month(s)" if membership_type in [
+                'monthly', 'student', 'staff', 'external'] else "6 months"
             flash(
-                f'Member registered successfully! Member ID: {member.member_id}', 'success')
+                f'Member registered successfully! Member ID: {member.member_id}. Duration: {duration_text}. Total Fees: K{fees["total"]}',
+                'success'
+            )
             return redirect(url_for('view_members'))
 
         except Exception as e:
             db.session.rollback()
+            print(f"❌ Registration error: {e}")
+            traceback.print_exc()
             flash(f'Error registering member: {str(e)}', 'error')
             return render_template('register_member.html')
+
+
+@app.route('/edit_member/<int:member_id>', methods=['GET', 'POST'])
+@login_required
+def edit_member(member_id):
+    """Edit member information"""
+    member = Member.query.get_or_404(member_id)
+
+    if request.method == 'POST':
+        try:
+            member.full_name = request.form.get('full_name', '').strip()
+            member.email = request.form.get('email', '').strip()
+            member.phone = request.form.get('phone', '').strip()
+            member.address = request.form.get('address', '').strip()
+            member.membership_type = request.form.get('membership_type')
+
+            nrc_number = request.form.get('nrc_number', '').strip()
+            if nrc_number:
+                member.nrc_number = nrc_number
+
+            # Handle photo upload
+            photo_file = request.files.get('photo')
+            if photo_file and photo_file.filename:
+                if allowed_file(photo_file.filename):
+                    if member.photo_path:
+                        old_photo_path = os.path.join(
+                            app.config['UPLOAD_FOLDER'], member.photo_path)
+                        if os.path.exists(old_photo_path):
+                            os.remove(old_photo_path)
+
+                    filename = secure_filename(photo_file.filename)
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    photo_filename = f"{timestamp}_{filename}"
+                    photo_path = os.path.join(
+                        app.config['UPLOAD_FOLDER'], photo_filename)
+                    photo_file.save(photo_path)
+                    member.photo_path = photo_filename
+
+            db.session.commit()
+            flash(
+                f'Member {member.full_name} updated successfully!', 'success')
+            return redirect(url_for('member_details', member_id=member.id))
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error updating member: {e}")
+            flash(f'Error updating member: {str(e)}', 'error')
+
+    return render_template('edit_member.html', member=member)
+
+
+@app.route('/print_id/<int:member_id>')
+@login_required
+def print_id(member_id):
+    """Print ID card for member"""
+    member = Member.query.get_or_404(member_id)
+
+    try:
+        return render_template('print_id_card.html',
+                               member=member,
+                               contact_info=ZCAS_CONTACT)
+    except Exception as e:
+        print(f"Error in print_id: {str(e)}")
+        traceback.print_exc()
+        flash(f'Error generating ID card: {str(e)}', 'error')
+        return redirect(url_for('member_details', member_id=member.id))
+
+
+@app.route('/print_quotation/<int:payment_id>')
+@login_required
+def print_quotation(payment_id):
+    """Print quotation for payment"""
+    try:
+        payment = Payment.query.get_or_404(payment_id)
+        member = payment.member
+
+        return render_template('print_quotation.html',
+                               payment=payment,
+                               member=member,
+                               contact_info=ZCAS_CONTACT,
+                               bank_details=BANK_DETAILS)
+    except Exception as e:
+        print(f"Error in print_quotation: {e}")
+        traceback.print_exc()
+        flash(f'Error generating quotation: {str(e)}', 'error')
+        return redirect(url_for('view_payments'))
 
 
 @app.route('/auto_check_expiry')

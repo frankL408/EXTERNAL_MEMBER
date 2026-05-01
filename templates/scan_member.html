@@ -170,6 +170,56 @@
             }
         }
 
+        /* Persistent Member Info Card - Enhanced Visibility */
+        .current-member-card {
+            background: linear-gradient(135deg, #1E3A8A 0%, #2D4BA8 100%);
+            border-radius: 24px;
+            padding: 20px;
+            margin-top: 20px;
+            color: white;
+            transition: all 0.3s ease;
+            border: 2px solid #FFC107;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .current-member-card .member-photo-large {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #FFC107;
+            background: white;
+        }
+
+        .current-member-card .member-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .current-member-card .member-detail {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .current-member-card .badge-status-large {
+            font-size: 1rem;
+            padding: 8px 20px;
+            border-radius: 40px;
+        }
+
+        .empty-member-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            border: 2px dashed #dee2e6;
+        }
+
         .logs-dropdown-card {
             background: white;
             border-radius: 32px;
@@ -183,6 +233,10 @@
             border-bottom: 1px solid #e9edf2;
             cursor: pointer;
             transition: 0.2s;
+        }
+
+        .dropdown-header-custom:hover {
+            background: #f1f5f9;
         }
 
         .filter-bar-mini {
@@ -242,6 +296,14 @@
             .filter-bar-mini {
                 flex-direction: column;
                 align-items: stretch;
+            }
+
+            .current-member-card .member-name {
+                font-size: 1.2rem;
+            }
+
+            .current-member-card .member-detail {
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -323,7 +385,15 @@
                     </button>
                 </div>
 
-                <div id="scanResultArea" class="mt-3" style="display: none;"></div>
+                <!-- PERSISTENT CURRENT MEMBER DISPLAY - Stays until next scan -->
+                <div id="currentMemberDisplay" class="mt-3">
+                    <div class="empty-member-card">
+                        <i class="fas fa-id-card fa-3x mb-2"></i>
+                        <h5>No Member Selected</h5>
+                        <p class="mb-0">Scan a card or enter a Member ID to display member information</p>
+                    </div>
+                </div>
+
                 <div class="alert alert-light mt-3 small rounded-4" id="infoAlert">
                     <i class="fas fa-door-open text-success"></i> <strong>Access Mode:</strong> First scan = Check In |
                     Second scan = Check Out
@@ -382,7 +452,7 @@
                         </thead>
                         <tbody id="logsDropdownBody">
                             <tr>
-                                <td colspan="5" class="text-center py-4">Loading...</td>
+                                <td colspan="5" class="text-center py-4">Loading......<table>
                             </tr>
                         </tbody>
                     </table>
@@ -402,6 +472,7 @@
         let capturedCardId = null;
         let currentLogsPage = 1;
         let scanTimeout = null;
+        let currentMemberData = null;
 
         // Initialize audio
         function initAudio() {
@@ -451,6 +522,122 @@
                 if (m === '>') return '&gt;';
                 return m;
             });
+        }
+
+        // Display persistent member info
+        function displayPersistentMemberInfo(memberData, action) {
+            const displayDiv = document.getElementById('currentMemberDisplay');
+            const isCheckIn = action === 'check_in';
+            const statusBadge = isCheckIn ?
+                '<span class="badge bg-success badge-status-large">✓ CHECKED IN</span>' :
+                '<span class="badge bg-warning text-dark badge-status-large">✓ CHECKED OUT</span>';
+
+            const photoHtml = memberData.photo_path ?
+                `<img src="${memberData.photo_path}" class="member-photo-large" onerror="this.src='https://via.placeholder.com/100'">` :
+                `<div class="member-photo-large d-flex align-items-center justify-content-center bg-light rounded-circle mx-auto" style="font-size: 3rem;"><i class="fas fa-user-circle text-secondary"></i></div>`;
+
+            const html = `
+                <div class="current-member-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            ${photoHtml}
+                        </div>
+                        <div class="col-md-9">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                                <div>
+                                    <div class="member-name">${escapeHtml(memberData.full_name)}</div>
+                                    <div class="member-detail">
+                                        <i class="fas fa-id-card"></i>
+                                        <strong>Member ID:</strong> ${escapeHtml(memberData.member_id)}
+                                    </div>
+                                    <div class="member-detail">
+                                        <i class="fas fa-microchip"></i>
+                                        <strong>RFID Card:</strong> ${memberData.rfid_uid ? escapeHtml(memberData.rfid_uid) : 'Not Assigned'}
+                                    </div>
+                                    ${memberData.expiry_date ? `
+                                    <div class="member-detail">
+                                        <i class="far fa-calendar-alt"></i>
+                                        <strong>Expiry Date:</strong> ${memberData.expiry_date}
+                                        ${memberData.days_remaining !== null && memberData.days_remaining <= 7 && memberData.days_remaining >= 0 ?
+                        `<span class="badge bg-warning text-dark ms-2">Expires in ${memberData.days_remaining} days</span>` : ''}
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                <div class="text-end">
+                                    ${statusBadge}
+                                    <div class="mt-2">
+                                        <small class="text-muted">${memberData.message}</small>
+                                    </div>
+                                    ${memberData.action === 'check_out' && memberData.duration_minutes ?
+                    `<div class="mt-2"><span class="badge bg-info">Duration: ${memberData.duration_minutes} min</span></div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            displayDiv.innerHTML = html;
+            currentMemberData = memberData;
+        }
+
+        function displayEmptyMemberDisplay() {
+            const displayDiv = document.getElementById('currentMemberDisplay');
+            displayDiv.innerHTML = `
+                <div class="empty-member-card">
+                    <i class="fas fa-id-card fa-3x mb-2"></i>
+                    <h5>Ready for Scan</h5>
+                    <p class="mb-0">Tap or scan a card to display member information</p>
+                </div>
+            `;
+            currentMemberData = null;
+        }
+
+        function displayExpiredMemberPersistent(data) {
+            const displayDiv = document.getElementById('currentMemberDisplay');
+            const photoHtml = data.photo_path ?
+                `<img src="${data.photo_path}" class="member-photo-large" onerror="this.src='https://via.placeholder.com/100'">` :
+                `<div class="member-photo-large d-flex align-items-center justify-content-center bg-light rounded-circle mx-auto" style="font-size: 3rem;"><i class="fas fa-user-circle text-secondary"></i></div>`;
+
+            const html = `
+                <div class="current-member-card" style="background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            ${photoHtml}
+                        </div>
+                        <div class="col-md-9">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                                <div>
+                                    <div class="member-name">${escapeHtml(data.full_name)}</div>
+                                    <div class="member-detail">
+                                        <i class="fas fa-id-card"></i>
+                                        <strong>Member ID:</strong> ${escapeHtml(data.member_id)}
+                                    </div>
+                                    <div class="member-detail">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>Status:</strong> <span class="badge bg-danger">EXPIRED</span>
+                                    </div>
+                                    ${data.expiry_date ? `
+                                    <div class="member-detail">
+                                        <i class="far fa-calendar-alt"></i>
+                                        <strong>Expired on:</strong> ${data.expiry_date}
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                <div class="text-end">
+                                    <div class="alert alert-danger mb-0">
+                                        <i class="fas fa-ban"></i> ACCESS DENIED - Membership Expired
+                                    </div>
+                                    <div class="mt-2">
+                                        <small>Please renew at front desk</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            displayDiv.innerHTML = html;
+            currentMemberData = data;
         }
 
         // Set Mode
@@ -549,7 +736,6 @@
             showQuickResult('<div class="spinner-border spinner-border-sm text-primary me-2"></div> Assigning...', 'info', true);
 
             try {
-                // Find member by Member ID
                 const searchResponse = await fetch(`/api/search_members?q=${encodeURIComponent(memberId)}`);
                 const searchData = await searchResponse.json();
 
@@ -559,8 +745,6 @@
                 }
 
                 const member = searchData.members[0];
-
-                // Assign the card
                 const assignResponse = await fetch('/api/assign_rfid_to_member', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -590,7 +774,6 @@
             }
         }
 
-        // Search by name
         async function searchMembersSimple() {
             const query = document.getElementById('searchMemberInput').value.trim();
             if (!query) return;
@@ -627,7 +810,6 @@
         function selectMemberAndAssign(memberId, memberName) {
             document.getElementById('memberIdInput').value = memberId;
             document.getElementById('simpleSearchResults').style.display = 'none';
-            // Optionally show a small confirmation
             showQuickResult(`Selected: ${memberName}. Click Assign to complete.`, 'info');
         }
 
@@ -644,11 +826,9 @@
         // Access Mode Functions
         async function processEntranceScan(scannedValue) {
             if (!scannedValue.trim()) {
-                showMessage('Please scan or enter a card ID', 'danger');
+                showTemporaryMessage('Please scan or enter a card ID', 'danger');
                 return;
             }
-
-            showMessage('<div class="spinner-border spinner-border-sm text-primary me-2"></div> Processing...', 'info', true);
 
             try {
                 const response = await fetch('/api/scan_rfid', {
@@ -660,79 +840,46 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    displayAccessResult(data);
+                    displayPersistentMemberInfo(data, data.action);
                     playBeep(data.action === 'check_in' ? 'check_in' : 'check_out');
                     fetchFilteredLogs(currentLogsPage);
                     document.getElementById('scanExternalId').value = '';
-                    setTimeout(() => {
-                        const area = document.getElementById('scanResultArea');
-                        if (area) area.style.display = 'none';
-                    }, 4000);
                 } else if (data.is_expired) {
-                    showExpiredError(data);
+                    displayExpiredMemberPersistent(data);
                     playBeep('error');
                     document.getElementById('scanExternalId').value = '';
                 } else {
-                    showMessage(data.message || 'Member not found or card not registered', 'danger');
+                    showTemporaryMessage(data.message || 'Member not found or card not registered', 'danger');
                     playBeep('error');
                 }
             } catch (err) {
                 console.error(err);
-                showMessage('Network error. Please check connection.', 'danger');
+                showTemporaryMessage('Network error. Please check connection.', 'danger');
                 playBeep('error');
             }
         }
 
+        function showTemporaryMessage(msg, type) {
+            const tempDiv = document.createElement('div');
+            tempDiv.className = `alert alert-${type === 'danger' ? 'danger' : type} mt-2`;
+            tempDiv.innerHTML = msg;
+            const container = document.querySelector('.scan-hero .p-4');
+            container.appendChild(tempDiv);
+            setTimeout(() => tempDiv.remove(), 3000);
+        }
+
         function showMessage(msg, type, isLoading = false) {
-            const area = document.getElementById('scanResultArea');
-            area.style.display = 'block';
-            if (isLoading) area.innerHTML = `<div class="alert alert-info">${msg}</div>`;
-            else area.innerHTML = `<div class="alert alert-${type === 'danger' ? 'danger' : type}">${msg}</div>`;
-            if (!isLoading) setTimeout(() => {
-                if (area.style.display === 'block') area.style.display = 'none';
-            }, 4000);
-        }
-
-        function displayAccessResult(data) {
-            const isCheckIn = data.action === 'check_in';
-            const badge = isCheckIn ?
-                '<span class="badge bg-success px-3 py-2">✓ CHECKED IN</span>' :
-                '<span class="badge bg-warning px-3 py-2 text-dark">✓ CHECKED OUT</span>';
-
-            const html = `
-                <div class="d-flex gap-3 align-items-center bg-light p-3 rounded-4">
-                    <div class="text-center">
-                        ${data.photo_path ? `<img src="${data.photo_path}" width="60" height="60" class="rounded-circle" onerror="this.src='https://via.placeholder.com/60'">` :
-                    `<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:60px;height:60px;"><i class="fas fa-user fa-2x"></i></div>`}
-                    </div>
-                    <div>
-                        ${badge}
-                        <h5 class="mb-0">${escapeHtml(data.full_name)}</h5>
-                        <small>ID: ${escapeHtml(data.member_id)}</small>
-                        <div class="small text-muted mt-1">${data.message}</div>
-                        ${data.action === 'check_out' && data.duration_minutes ? `<small class="text-info">⏱️ Duration: ${data.duration_minutes} min</small>` : ''}
-                    </div>
-                </div>
-            `;
-            document.getElementById('scanResultArea').innerHTML = html;
-            document.getElementById('scanResultArea').style.display = 'block';
-        }
-
-        function showExpiredError(data) {
-            const html = `
-                <div class="access-denied-card p-3 rounded-4">
-                    <div class="text-center"><i class="fas fa-ban text-danger fa-2x"></i></div>
-                    <div class="text-center"><strong class="text-danger">ACCESS DENIED</strong></div>
-                    <div class="small mt-2">${escapeHtml(data.full_name)} (${data.member_id})<br>Membership expired. Please renew at front desk.</div>
-                </div>
-            `;
-            document.getElementById('scanResultArea').innerHTML = html;
-            document.getElementById('scanResultArea').style.display = 'block';
+            // For assign mode messages
+            const tempDiv = document.createElement('div');
+            tempDiv.className = `alert alert-${type === 'danger' ? 'danger' : type} mt-2`;
+            tempDiv.innerHTML = msg;
+            const container = document.querySelector('.scan-hero .p-4');
+            container.appendChild(tempDiv);
+            setTimeout(() => tempDiv.remove(), 4000);
         }
 
         function clearScan() {
             document.getElementById('scanExternalId').value = '';
-            document.getElementById('scanResultArea').style.display = 'none';
             if (currentMode === 'assign') {
                 document.getElementById('quickAssignResult').style.display = 'none';
             }
@@ -807,19 +954,15 @@
             } catch (e) { console.log(e); }
         }
 
-        // Event Listeners - Initialize after DOM loads
+        // Event Listeners
         document.addEventListener('DOMContentLoaded', function () {
-            // Mode buttons
             document.getElementById('accessModeBtn').addEventListener('click', function () { setMode('access'); });
             document.getElementById('assignModeBtn').addEventListener('click', function () { setMode('assign'); });
-
-            // Action buttons
             document.getElementById('processBtn').addEventListener('click', processAction);
             document.getElementById('clearScanBtn').addEventListener('click', clearScan);
             document.getElementById('quickAssignBtn').addEventListener('click', quickAssignCard);
             document.getElementById('searchMemberBtn').addEventListener('click', searchMembersSimple);
 
-            // Filter buttons
             document.getElementById('applyLogsFilterBtn')?.addEventListener('click', () => fetchFilteredLogs(1));
             document.getElementById('clearLogsFilterBtn')?.addEventListener('click', () => {
                 document.getElementById('filterStatusDropdown').value = 'all';
@@ -830,7 +973,6 @@
                 fetchFilteredLogs(1);
             });
 
-            // Auto-detect RFID scanner input
             const scanField = document.getElementById('scanExternalId');
             scanField.addEventListener('input', function (e) {
                 clearTimeout(scanTimeout);
@@ -850,7 +992,6 @@
                 }
             });
 
-            // Dropdown toggle
             const dropdownToggle = document.getElementById('logsDropdownToggle');
             const panel = document.getElementById('logsCollapsiblePanel');
             const toggleIcon = document.getElementById('toggleIcon');
@@ -864,7 +1005,6 @@
                 }
             });
 
-            // Initialize
             setMode('access');
             scanField.focus();
             fetchSummaryOnly();
