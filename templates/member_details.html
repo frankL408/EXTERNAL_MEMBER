@@ -89,7 +89,7 @@
                                         <div class="col-md-6 text-end">
                                             {% if member.id_printed %}
                                             <button class="btn btn-outline-warning"
-                                                onclick="markIdAsNotPrinted({{ member.id }})" id="markNotPrintedBtn">
+                                                onclick="markIdAsNotPrinted({{ member.id }})">
                                                 <i class="fas fa-undo"></i> Mark as Not Printed
                                             </button>
                                             <a href="{{ url_for('print_id', member_id=member.id) }}"
@@ -98,7 +98,7 @@
                                             </a>
                                             {% else %}
                                             <button class="btn btn-outline-success"
-                                                onclick="markIdAsPrinted({{ member.id }})" id="markPrintedBtn">
+                                                onclick="markIdAsPrinted({{ member.id }})">
                                                 <i class="fas fa-check-circle"></i> Mark as Printed
                                             </button>
                                             <a href="{{ url_for('print_id', member_id=member.id) }}"
@@ -195,11 +195,11 @@
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert('Error marking ID as printed: ' + data.error);
+                    alert('Error marking ID as printed: ' + (data.error || 'Unknown error'));
                 }
             } catch (err) {
                 console.error('Error:', err);
-                alert('Error marking ID as printed');
+                alert('Error marking ID as printed. Please try again.');
             }
         }
     }
@@ -218,11 +218,11 @@
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert('Error marking ID as not printed: ' + data.error);
+                    alert('Error marking ID as not printed: ' + (data.error || 'Unknown error'));
                 }
             } catch (err) {
                 console.error('Error:', err);
-                alert('Error marking ID as not printed');
+                alert('Error marking ID as not printed. Please try again.');
             }
         }
     }
