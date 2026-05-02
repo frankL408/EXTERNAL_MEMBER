@@ -72,7 +72,7 @@
         /* ===== FRONT SIDE ELEMENTS ===== */
         .card-top-ribbon {
             background: linear-gradient(98deg, #0B1E4E 0%, #1E3A8A 100%);
-            padding: 12px 15px;
+            padding: 10px 15px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -81,7 +81,7 @@
         }
 
         .uni-name {
-            font-size: 16pt;
+            font-size: 15pt;
             font-weight: 800;
             color: white;
             letter-spacing: 2px;
@@ -90,7 +90,7 @@
         }
 
         .member-badge-left {
-            padding: 4px 15px 0 15px;
+            padding: 2px 15px 0 15px;
             text-align: left;
         }
 
@@ -99,10 +99,10 @@
             align-items: center;
             gap: 4px;
             background: rgba(30, 58, 138, 0.15);
-            padding: 4px 14px;
+            padding: 2px 10px;
             border-radius: 20px;
-            font-size: 8pt;
-            font-weight: 800;
+            font-size: 7pt;
+            font-weight: 700;
             color: #1E3A8A;
         }
 
@@ -111,7 +111,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 8px 0;
+            margin: 2px 0;
         }
 
         .logo-container {
@@ -119,41 +119,35 @@
             justify-content: center;
             align-items: center;
             background: white;
-            width: 65px;
-            height: 65px;
+            width: 55px;
+            height: 55px;
         }
 
         .uni-logo {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             object-fit: contain;
         }
 
-        .divider-light {
-            height: 1px;
-            background: linear-gradient(90deg, #cbd5e1, #1E3A8A, #cbd5e1);
-            margin: 3px 0;
-            width: 100%;
-        }
-
+        /* Main content area - no dividers */
         .card-main-content {
             display: flex;
-            padding: 8px 15px;
+            padding: 5px 15px 8px 15px;
             gap: 15px;
             flex: 1;
             width: 100%;
             align-items: center;
-            min-height: 120px;
+            min-height: auto;
         }
 
         .member-photo-left {
             flex-shrink: 0;
-            width: 90px;
+            width: 85px;
         }
 
         .member-photo {
-            width: 90px;
-            height: 90px;
+            width: 85px;
+            height: 85px;
             background: #f0f0f0;
             border-radius: 50%;
             display: flex;
@@ -170,7 +164,7 @@
         }
 
         .member-photo-placeholder {
-            font-size: 45px;
+            font-size: 40px;
             color: #adb5bd;
         }
 
@@ -179,11 +173,11 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 10px;
+            gap: 6px;
         }
 
         .member-fullname {
-            font-size: 13pt;
+            font-size: 12pt;
             font-weight: 800;
             color: #0A2540;
             letter-spacing: -0.2px;
@@ -191,22 +185,22 @@
             text-transform: uppercase;
             border-left: 3px solid #FFC107;
             padding-left: 8px;
-            margin-bottom: 2px;
+            margin-bottom: 0;
         }
 
         .member-detail-item {
             display: flex;
             align-items: baseline;
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: 700;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
         .member-detail-label {
             font-weight: 800;
             color: #1e293b;
             min-width: 85px;
-            font-size: 11pt;
+            font-size: 10pt;
             text-transform: uppercase;
         }
 
@@ -220,24 +214,24 @@
             color: #1E3A8A;
             font-family: monospace;
             margin-left: 5px;
-            font-size: 11pt;
+            font-size: 10pt;
             text-transform: uppercase;
         }
 
+        /* Footer icons - no top border anymore */
         .card-footer-icon {
             text-align: center;
-            margin-top: 4px;
+            margin-top: 0;
             font-size: 7pt;
             font-weight: 600;
             color: #6c757d;
             display: flex;
             justify-content: center;
             gap: 15px;
-            padding: 5px 0 8px 0;
-            border-top: 1px solid #f0f2f5;
+            padding: 4px 0 6px 0;
         }
 
-        /* ===== BACK SIDE ELEMENTS ===== */
+        /* ===== BACK SIDE ELEMENTS - BLUE THEME, NO RED ===== */
         .back-side-container {
             display: flex;
             flex-direction: column;
@@ -262,7 +256,7 @@
         .back-if-found-text {
             font-size: 10pt;
             font-weight: 700;
-            color: #DC2626;
+            color: #1E3A8A;
             text-align: center;
             margin-bottom: 15px;
         }
@@ -494,12 +488,13 @@
                 </div>
             </div>
 
+            <!-- Logo section -->
             <div class="logo-section">
                 <div class="logo-container">
                     <img src="{{ url_for('static', filename='images/logo.png') }}" class="uni-logo" alt="ZCAS Crest"
                         onerror="this.onerror=null; this.style.display='none'; this.parentElement.querySelector('.logo-fallback-alt').style.display='flex';">
                     <div class="logo-fallback-alt" style="display: none; align-items:center; justify-content:center;">
-                        <svg width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                             <rect width="100" height="100" rx="18" fill="#1E3A8A" />
                             <circle cx="50" cy="50" r="32" fill="#FFC107" />
                             <text x="50" y="68" font-size="44" text-anchor="middle" fill="#0B1E4E" font-weight="900"
@@ -509,8 +504,7 @@
                 </div>
             </div>
 
-            <div class="divider-light"></div>
-
+            <!-- No divider lines - content flows directly -->
             <div class="card-main-content">
                 <div class="member-photo-left">
                     <div class="member-photo">
@@ -541,15 +535,14 @@
                 </div>
             </div>
 
-            <div class="divider-light"></div>
-
+            <!-- Footer icons - no top border -->
             <div class="card-footer-icon">
                 <span><i class="fas fa-fingerprint"></i> RFID ready</span>
                 <span><i class="fas fa-shield-alt"></i> verified</span>
             </div>
         </div>
 
-        <!-- ==================== BACK SIDE - PAGE 2 ==================== -->
+        <!-- ==================== BACK SIDE - PAGE 2 (NO RED, BLUE THEME) ==================== -->
         <div class="card-back">
             <div class="back-side-container">
                 <div class="back-property-text">
@@ -636,7 +629,7 @@
                 };
             }
 
-            console.log("✅ ZCAS ID Card – Exactly 2 pages (front and back) for printing");
+            console.log("✅ ZCAS ID Card – All dividers removed, back side blue theme (no red)");
 
             // Add print instruction
             const style = document.createElement('style');
