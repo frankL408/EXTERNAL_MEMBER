@@ -170,7 +170,6 @@
             }
         }
 
-        /* Persistent Member Info Card - Enhanced Visibility */
         .current-member-card {
             background: linear-gradient(135deg, #1E3A8A 0%, #2D4BA8 100%);
             border-radius: 24px;
@@ -211,6 +210,16 @@
             border-radius: 40px;
         }
 
+        .badge-checked-in {
+            background-color: #10B981;
+            color: white;
+        }
+
+        .badge-checked-out {
+            background-color: #F59E0B;
+            color: #1F2937;
+        }
+
         .empty-member-card {
             background: rgba(255, 255, 255, 0.9);
             border-radius: 24px;
@@ -233,10 +242,6 @@
             border-bottom: 1px solid #e9edf2;
             cursor: pointer;
             transition: 0.2s;
-        }
-
-        .dropdown-header-custom:hover {
-            background: #f1f5f9;
         }
 
         .filter-bar-mini {
@@ -389,8 +394,8 @@
                 <div id="currentMemberDisplay" class="mt-3">
                     <div class="empty-member-card">
                         <i class="fas fa-id-card fa-3x mb-2"></i>
-                        <h5>No Member Selected</h5>
-                        <p class="mb-0">Scan a card or enter a Member ID to display member information</p>
+                        <h5>Ready for Scan</h5>
+                        <p class="mb-0">Scan a card to display member information</p>
                     </div>
                 </div>
 
@@ -448,7 +453,7 @@
                                 <th>Card ID</th>
                                 <th>Status</th>
                                 <th>Details</th>
-                            </tr>
+                                </td>
                         </thead>
                         <tbody id="logsDropdownBody">
                             <tr>
@@ -524,21 +529,25 @@
             });
         }
 
-        // Display persistent member info - FIXED to show correct status
-        function displayPersistentMemberInfo(memberData, action, message) {
+        // Display persistent member info
+        function displayPersistentMemberInfo(memberData) {
             const displayDiv = document.getElementById('currentMemberDisplay');
-            const isCheckIn = (action === 'check_in');
 
-            // Create status badge based on actual action from backend
+            // Determine status based on the action from backend
+            const isCheckIn = (memberData.action === 'check_in');
+
             let statusBadge = '';
             let statusMessage = '';
+            let statusColor = '';
 
             if (isCheckIn) {
                 statusBadge = '<span class="badge bg-success badge-status-large"><i class="fas fa-sign-in-alt"></i> CHECKED IN</span>';
-                statusMessage = message || 'Welcome! You have been checked in successfully.';
+                statusMessage = memberData.message || 'Welcome! You have been checked in successfully.';
+                statusColor = 'success';
             } else {
                 statusBadge = '<span class="badge bg-warning text-dark badge-status-large"><i class="fas fa-sign-out-alt"></i> CHECKED OUT</span>';
-                statusMessage = message || 'Goodbye! You have been checked out successfully.';
+                statusMessage = memberData.message || 'Goodbye! You have been checked out successfully.';
+                statusColor = 'warning';
             }
 
             const photoHtml = memberData.photo_path ?
@@ -577,7 +586,7 @@
                                     <div class="mt-2">
                                         <small>${escapeHtml(statusMessage)}</small>
                                     </div>
-                                    ${action === 'check_out' && memberData.duration_minutes ?
+                                    ${memberData.action === 'check_out' && memberData.duration_minutes ?
                     `<div class="mt-2"><span class="badge bg-info">Duration: ${memberData.duration_minutes} min</span></div>` : ''}
                                 </div>
                             </div>
@@ -586,7 +595,13 @@
                 </div>
             `;
             displayDiv.innerHTML = html;
-            currentMemberData = memberData;
+
+            // Log for debugging
+            console.log('Member scan:', {
+                action: memberData.action,
+                name: memberData.full_name,
+                status: isCheckIn ? 'CHECKED IN' : 'CHECKED OUT'
+            });
         }
 
         function displayEmptyMemberDisplay() {
@@ -832,12 +847,14 @@
             }, 4000);
         }
 
-        // Access Mode Functions - FIXED to correctly handle check-in/check-out
+        // Access Mode Functions
         async function processEntranceScan(scannedValue) {
             if (!scannedValue.trim()) {
                 showTemporaryMessage('Please scan or enter a card ID', 'danger');
                 return;
             }
+
+            showTemporaryMessage('Processing...', 'info');
 
             try {
                 const response = await fetch('/api/scan_rfid', {
@@ -848,10 +865,11 @@
 
                 const data = await response.json();
 
+                console.log('Scan response:', data); // Debug log
+
                 if (response.ok && data.success) {
-                    // data.action will be either 'check_in' or 'check_out' from backend
-                    // Pass the action and message to display function
-                    displayPersistentMemberInfo(data, data.action, data.message);
+                    // Display using the complete member data which includes action
+                    displayPersistentMemberInfo(data);
                     playBeep(data.action === 'check_in' ? 'check_in' : 'check_out');
                     fetchFilteredLogs(currentLogsPage);
                     document.getElementById('scanExternalId').value = '';
@@ -871,8 +889,12 @@
         }
 
         function showTemporaryMessage(msg, type) {
+            // Remove existing temporary messages
+            const existingMessages = document.querySelectorAll('.temp-message');
+            existingMessages.forEach(msg => msg.remove());
+
             const tempDiv = document.createElement('div');
-            tempDiv.className = `alert alert-${type === 'danger' ? 'danger' : type} mt-2`;
+            tempDiv.className = `alert alert-${type === 'danger' ? 'danger' : type} mt-2 temp-message`;
             tempDiv.innerHTML = msg;
             const container = document.querySelector('.scan-hero .p-4');
             container.appendChild(tempDiv);
@@ -881,11 +903,11 @@
 
         function showMessage(msg, type, isLoading = false) {
             const tempDiv = document.createElement('div');
-            tempDiv.className = `alert alert-${type === 'danger' ? 'danger' : type} mt-2`;
+            tempDiv.className = `alert alert-${type === 'danger' ? 'danger' : type} mt-2 temp-message`;
             tempDiv.innerHTML = msg;
             const container = document.querySelector('.scan-hero .p-4');
             container.appendChild(tempDiv);
-            setTimeout(() => tempDiv.remove(), 4000);
+            if (!isLoading) setTimeout(() => tempDiv.remove(), 4000);
         }
 
         function clearScan() {

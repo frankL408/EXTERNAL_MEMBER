@@ -109,6 +109,8 @@ class Member(db.Model):
     expiry_date = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default='active')
     rfid_uid = db.Column(db.String(50), unique=True, nullable=True)
+    # Track if ID card has been printed
+    id_printed = db.Column(db.Boolean, default=False)
 
     payments = db.relationship('Payment', backref='member', lazy=True)
     access_logs = db.relationship('AccessLog', backref='member', lazy=True)
@@ -164,6 +166,16 @@ def init_database():
         with app.app_context():
             db.create_all()
             print("✅ Database tables checked/created successfully")
+
+            # Add id_printed column if it doesn't exist (for existing databases)
+            try:
+                with db.engine.connect() as conn:
+                    conn.execute(
+                        db.text('ALTER TABLE member ADD COLUMN id_printed BOOLEAN DEFAULT 0'))
+                    conn.commit()
+                    print("✅ Added id_printed column to member table")
+            except Exception as e:
+                print("ℹ️ id_printed column already exists or error:", str(e))
 
             if not Admin.query.first():
                 admin = Admin(username='admin')
@@ -648,7 +660,8 @@ def register_member():
                 receipt_number=receipt_number,
                 registration_date=registration_date,
                 status='active',
-                rfid_uid=None
+                rfid_uid=None,
+                id_printed=False  # New member starts with ID not printed
             )
 
             # Set expiry date
@@ -774,6 +787,44 @@ def print_id(member_id):
         traceback.print_exc()
         flash(f'Error generating ID card: {str(e)}', 'error')
         return redirect(url_for('member_details', member_id=member.id))
+
+
+# ========== ID CARD PRINTING STATUS API ENDPOINTS ==========
+
+@app.route('/api/mark_id_printed/<int:member_id>', methods=['POST'])
+@login_required
+def mark_id_printed(member_id):
+    """Mark that the ID card has been printed"""
+    try:
+        member = Member.query.get_or_404(member_id)
+        member.id_printed = True
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'ID card marked as printed',
+            'id_printed': member.id_printed
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/mark_id_not_printed/<int:member_id>', methods=['POST'])
+@login_required
+def mark_id_not_printed(member_id):
+    """Mark that the ID card has NOT been printed"""
+    try:
+        member = Member.query.get_or_404(member_id)
+        member.id_printed = False
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'ID card marked as not printed',
+            'id_printed': member.id_printed
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/print_quotation/<int:payment_id>')
@@ -1096,7 +1147,8 @@ def api_search_members():
                 'full_name': member.full_name,
                 'nrc_number': member.nrc_number,
                 'photo_path': member.photo_path,
-                'rfid_assigned': bool(member.rfid_uid)
+                'rfid_assigned': bool(member.rfid_uid),
+                'id_printed': member.id_printed  # Include ID printed status
             })
 
         return jsonify({'success': True, 'members': members_data})

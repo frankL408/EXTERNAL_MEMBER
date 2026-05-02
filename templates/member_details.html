@@ -60,13 +60,62 @@
                         </div>
                     </div>
 
+                    <!-- ID Card Status Section with Buttons -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-id-card"></i> ID Card Status</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center">
+                                                <i
+                                                    class="fas {% if member.id_printed %}fa-check-circle text-success{% else %}fa-print text-warning{% endif %} fa-2x me-3"></i>
+                                                <div>
+                                                    <h6 class="mb-0">Current Status:</h6>
+                                                    <span
+                                                        class="badge {% if member.id_printed %}bg-success{% else %}bg-warning text-dark{% endif %} p-2">
+                                                        {% if member.id_printed %}
+                                                        <i class="fas fa-check-circle"></i> ID CARD PRINTED
+                                                        {% else %}
+                                                        <i class="fas fa-print"></i> ID CARD NOT PRINTED
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            {% if member.id_printed %}
+                                            <button class="btn btn-outline-warning"
+                                                onclick="markIdAsNotPrinted({{ member.id }})" id="markNotPrintedBtn">
+                                                <i class="fas fa-undo"></i> Mark as Not Printed
+                                            </button>
+                                            <a href="{{ url_for('print_id', member_id=member.id) }}"
+                                                class="btn btn-info" target="_blank">
+                                                <i class="fas fa-print"></i> Reprint ID Card
+                                            </a>
+                                            {% else %}
+                                            <button class="btn btn-outline-success"
+                                                onclick="markIdAsPrinted({{ member.id }})" id="markPrintedBtn">
+                                                <i class="fas fa-check-circle"></i> Mark as Printed
+                                            </button>
+                                            <a href="{{ url_for('print_id', member_id=member.id) }}"
+                                                class="btn btn-primary" target="_blank">
+                                                <i class="fas fa-id-card"></i> Print ID Card
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row mt-4">
                         <div class="col-12">
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <a href="{{ url_for('print_id', member_id=member.id) }}" class="btn btn-info"
-                                    target="_blank">
-                                    <i class="fas fa-id-card"></i> Print ID Card
-                                </a>
                                 <a href="{{ url_for('edit_member', member_id=member.id) }}" class="btn btn-warning">
                                     <i class="fas fa-edit"></i> Edit Member
                                 </a>
@@ -130,4 +179,52 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Function to mark ID as printed
+    async function markIdAsPrinted(memberId) {
+        if (confirm('Mark this ID card as printed? This will update the status to "PRINTED".')) {
+            try {
+                const response = await fetch(`/api/mark_id_printed/${memberId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error marking ID as printed: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Error marking ID as printed');
+            }
+        }
+    }
+
+    // Function to mark ID as not printed
+    async function markIdAsNotPrinted(memberId) {
+        if (confirm('Mark this ID card as NOT printed? This will change the status to "NOT PRINTED".')) {
+            try {
+                const response = await fetch(`/api/mark_id_not_printed/${memberId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error marking ID as not printed: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Error marking ID as not printed');
+            }
+        }
+    }
+</script>
 {% endblock %}
