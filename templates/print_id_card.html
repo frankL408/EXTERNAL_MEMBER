@@ -72,7 +72,7 @@
         /* ===== FRONT SIDE ELEMENTS ===== */
         .card-top-ribbon {
             background: linear-gradient(98deg, #0B1E4E 0%, #1E3A8A 100%);
-            padding: 6px 15px;
+            padding: 12px 15px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -81,10 +81,10 @@
         }
 
         .uni-name {
-            font-size: 11pt;
+            font-size: 16pt;
             font-weight: 800;
             color: white;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             font-family: 'Inter', 'Segoe UI', sans-serif;
             text-transform: uppercase;
         }
@@ -106,7 +106,7 @@
             color: #1E3A8A;
         }
 
-        /* Logo section - ENLARGED */
+        /* Logo section */
         .logo-section {
             display: flex;
             justify-content: center;
@@ -179,11 +179,11 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .member-fullname {
-            font-size: 12pt;
+            font-size: 13pt;
             font-weight: 800;
             color: #0A2540;
             letter-spacing: -0.2px;
@@ -197,16 +197,17 @@
         .member-detail-item {
             display: flex;
             align-items: baseline;
-            font-size: 10pt;
+            font-size: 11pt;
             font-weight: 700;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         .member-detail-label {
             font-weight: 800;
             color: #1e293b;
-            min-width: 80px;
-            font-size: 10pt;
+            min-width: 85px;
+            font-size: 11pt;
+            text-transform: uppercase;
         }
 
         .member-detail-label:after {
@@ -215,11 +216,12 @@
         }
 
         .member-detail-value {
-            font-weight: 700;
-            color: #2c3e66;
+            font-weight: 800;
+            color: #1E3A8A;
             font-family: monospace;
             margin-left: 5px;
-            font-size: 10pt;
+            font-size: 11pt;
+            text-transform: uppercase;
         }
 
         .card-footer-icon {
@@ -247,22 +249,26 @@
             height: 100%;
         }
 
-        .back-title {
+        .back-property-text {
             font-size: 11pt;
             font-weight: 800;
             color: #1E3A8A;
-            text-transform: uppercase;
             text-align: center;
-            background: #EEF2FF;
-            display: inline-block;
-            width: auto;
-            padding: 6px 16px;
-            border-radius: 25px;
-            margin-bottom: 12px;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            padding: 0 10px;
+        }
+
+        .back-if-found-text {
+            font-size: 10pt;
+            font-weight: 700;
+            color: #DC2626;
+            text-align: center;
+            margin-bottom: 15px;
         }
 
         .back-icon-divider {
-            width: 50px;
+            width: 60px;
             height: 3px;
             background: #FFC107;
             margin: 8px auto 12px auto;
@@ -275,11 +281,11 @@
             background: #F8FAFE;
             padding: 12px 15px;
             border-radius: 15px;
-            margin: 8px 0;
+            margin: 5px 0;
         }
 
         .contact-line {
-            font-size: 8.5pt;
+            font-size: 9.5pt;
             font-weight: 600;
             color: #2c3e66;
             margin: 6px 0;
@@ -292,14 +298,20 @@
 
         .contact-line i {
             color: #1E3A8A;
-            width: 20px;
-            font-size: 9pt;
+            width: 25px;
+            font-size: 10pt;
         }
 
         .phone-emphasis {
             font-weight: 800;
-            color: #0e2b5e;
-            font-size: 9pt;
+            color: #1E3A8A;
+            font-size: 10pt;
+        }
+
+        .email-emphasis {
+            font-weight: 800;
+            color: #1E3A8A;
+            font-size: 10pt;
         }
 
         .back-footer-note {
@@ -358,55 +370,68 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* PRINT MEDIA - Optimized for duplex printing */
+        /* PRINT MEDIA - EXACTLY 2 PAGES (FRONT AND BACK) */
         @media print {
+
+            /* Hide all UI elements */
+            .print-actions,
+            .status-banner,
+            .btn-print-card,
+            .print-hint-tag {
+                display: none !important;
+            }
+
             body {
                 background: white;
                 margin: 0;
                 padding: 0;
             }
 
-            .print-actions {
-                display: none;
-            }
-
-            .status-banner {
-                display: none;
-            }
-
+            /* Front card - Page 1 */
             .card-front {
                 page-break-after: always;
                 page-break-before: avoid;
                 break-after: page;
                 break-inside: avoid;
+                break-before: avoid;
                 box-shadow: none;
                 margin: 0;
+                padding: 0;
                 width: 100%;
                 height: auto;
                 position: relative;
+                display: block;
+                visibility: visible;
             }
 
+            /* Back card - Page 2 */
             .card-back {
                 page-break-before: avoid;
                 page-break-after: avoid;
+                break-before: avoid;
+                break-after: avoid;
                 break-inside: avoid;
                 box-shadow: none;
                 margin: 0;
+                padding: 0;
                 width: 100%;
                 height: auto;
                 position: relative;
+                display: block;
+                visibility: visible;
             }
 
+            /* Hide any extra content */
             .id-card-container {
                 margin: 0;
                 padding: 0;
             }
 
+            /* Ensure cards are exactly one page each */
             .card-front,
             .card-back {
-                width: 100%;
-                max-width: 496.66px;
-                margin: 0 auto;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
 
             .uni-logo {
@@ -418,9 +443,20 @@
                 -webkit-print-color-adjust: exact;
             }
 
+            /* Remove any extra spacing */
+            html,
             body {
-                padding: 0;
                 margin: 0;
+                padding: 0;
+                height: auto;
+            }
+
+            /* Prevent orphans and widows */
+            p,
+            div,
+            span {
+                orphans: 3;
+                widows: 3;
             }
         }
     </style>
@@ -445,7 +481,7 @@
     </div>
 
     <div class="id-card-container">
-        <!-- ==================== FRONT SIDE ==================== -->
+        <!-- ==================== FRONT SIDE - PAGE 1 ==================== -->
         <div class="card-front">
             <div class="card-top-ribbon">
                 <div class="uni-name">ZCAS UNIVERSITY</div>
@@ -458,7 +494,6 @@
                 </div>
             </div>
 
-            <!-- ENLARGED LOGO SECTION -->
             <div class="logo-section">
                 <div class="logo-container">
                     <img src="{{ url_for('static', filename='images/logo.png') }}" class="uni-logo" alt="ZCAS Crest"
@@ -493,14 +528,14 @@
                     <div class="member-fullname">{{ member.full_name | upper }}</div>
 
                     <div class="member-detail-item">
-                        <span class="member-detail-label">Member ID</span>
-                        <span class="member-detail-value">{{ member.member_id }}</span>
+                        <span class="member-detail-label">MEMBER ID</span>
+                        <span class="member-detail-value">{{ member.member_id | upper }}</span>
                     </div>
 
                     {% if member.nrc_number and member.nrc_number != 'None' %}
                     <div class="member-detail-item">
-                        <span class="member-detail-label">NRC Number</span>
-                        <span class="member-detail-value">{{ member.nrc_number }}</span>
+                        <span class="member-detail-label">NRC NUMBER</span>
+                        <span class="member-detail-value">{{ member.nrc_number | upper }}</span>
                     </div>
                     {% endif %}
                 </div>
@@ -514,38 +549,32 @@
             </div>
         </div>
 
-        <!-- ==================== BACK SIDE ==================== -->
+        <!-- ==================== BACK SIDE - PAGE 2 ==================== -->
         <div class="card-back">
             <div class="back-side-container">
-                <div class="back-title">
-                    <i class="fas fa-gavel"></i> OFFICIAL PROPERTY
+                <div class="back-property-text">
+                    <i class="fas fa-gavel"></i> THIS CARD REMAINS THE PROPERTY OF ZCAS UNIVERSITY
                 </div>
+
+                <div class="back-if-found-text">
+                    <i class="fas fa-search"></i> IF FOUND PLEASE CONTACT:
+                </div>
+
                 <div class="back-icon-divider"></div>
+
                 <div class="contact-block">
                     <div class="contact-line">
                         <i class="fas fa-phone-alt"></i> <span class="phone-emphasis">{{ contact_info.phone if
                             contact_info else '+260 211 222 508' }}</span>
                     </div>
                     <div class="contact-line">
-                        <i class="fas fa-envelope"></i> <strong>{{ contact_info.email if contact_info else
-                            'library@zcasu.edu.zm' }}</strong>
-                    </div>
-                    <div class="contact-line">
-                        <i class="fas fa-globe"></i> <strong>{{ contact_info.website if contact_info else
-                            'www.zcasu.edu.zm' }}</strong>
-                    </div>
-                    <div class="contact-line">
-                        <i class="fas fa-map-pin"></i> <strong>{{ contact_info.address if contact_info else
-                            'Lusaka, Zambia | ZCAS University Library' }}</strong>
+                        <i class="fas fa-envelope"></i> <span class="email-emphasis">{{ contact_info.email if
+                            contact_info else 'library@zcasu.edu.zm' }}</span>
                     </div>
                 </div>
+
                 <div class="back-footer-note">
-                    <i class="fas fa-exclamation-triangle"></i> <strong>THIS CARD REMAINS THE PROPERTY OF ZCAS
-                        UNIVERSITY</strong><br>
-                    If found, please return to any library desk or call security.
-                </div>
-                <div style="margin-top: 10px; font-size: 7pt; font-weight: 600; color:#8ba0bc; text-align:center;">
-                    <i class="fas fa-microchip"></i> Authorized RFID | Duress verification enabled
+                    <i class="fas fa-microchip"></i> AUTHORIZED RFID | DURESS VERIFICATION ENABLED
                 </div>
             </div>
         </div>
@@ -607,9 +636,9 @@
                 };
             }
 
-            console.log("✅ ZCAS ID Card – External Member ID Card (Logo Enlarged)");
+            console.log("✅ ZCAS ID Card – Exactly 2 pages (front and back) for printing");
 
-            // Add print instruction overlay (will appear before print)
+            // Add print instruction
             const style = document.createElement('style');
             style.textContent = `
                 @media print {
@@ -621,6 +650,7 @@
                         margin: 0;
                         padding: 0;
                         background: white;
+                        height: auto;
                     }
                     .card-front, .card-back {
                         box-shadow: none;
