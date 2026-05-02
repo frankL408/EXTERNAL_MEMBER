@@ -40,6 +40,30 @@
                         </div>
                     </div>
 
+                    <!-- Bank Deposit Instructions Box -->
+                    <div class="alert alert-info mb-4">
+                        <h5><i class="fas fa-university"></i> Bank Deposit Information</h5>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Bank Name:</strong> Zanaco Bank Zambia</p>
+                                <p class="mb-1"><strong>Account Name:</strong> ZCAS University - Library Fees Collection
+                                </p>
+                                <p class="mb-1"><strong>Account Number:</strong> <span
+                                        class="text-primary fw-bold">5823001300137</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Branch:</strong> Lusaka Main Branch</p>
+                                <p class="mb-1"><strong>Sort Code:</strong> 01-01-01</p>
+                                <p class="mb-1"><strong>SWIFT Code:</strong> ZANAZMLU</p>
+                            </div>
+                        </div>
+                        <div class="mt-2 small">
+                            <i class="fas fa-info-circle"></i> Please use your <strong>Member ID</strong> as the
+                            reference when making the deposit.
+                        </div>
+                    </div>
+
                     <!-- Payments Table -->
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
@@ -50,7 +74,7 @@
                                     <th>Member Name</th>
                                     <th>Amount (K)</th>
                                     <th>Payment Method</th>
-                                    <th>Received By</th>
+                                    <th>Reference</th>
                                     <th>Date</th>
                                     <th>Actions</th>
                                 </tr>
@@ -63,9 +87,11 @@
                                     <td>{{ payment.member.full_name }}</td>
                                     <td class="text-end"><strong>K{{ "%.2f"|format(payment.amount) }}</strong></td>
                                     <td>
-                                        <span class="badge bg-secondary">{{ payment.payment_method }}</span>
+                                        <span class="badge bg-primary">Bank Deposit</span>
                                     </td>
-                                    <td>{{ payment.received_by }}</td>
+                                    <td>
+                                        <small class="text-muted">{{ payment.member.member_id }}</small>
+                                    </td>
                                     <td>{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') }}</td>
                                     <td>
                                         <a href="{{ url_for('print_quotation', payment_id=payment.id) }}"
@@ -75,15 +101,15 @@
                                     </td>
                                 </tr>
                                 {% else %}
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
-                                        <i class="fas fa-inbox fa-3x mb-2 d-block"></i>
-                                        No payment records found
-                                    </td>
+                                <td>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-3x mb-2 d-block"></i>
+                                    No payment records found
+                                </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
-                        </table>
+                            <tr>
                     </div>
                 </div>
             </div>

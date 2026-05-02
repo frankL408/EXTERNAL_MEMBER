@@ -45,17 +45,28 @@
 
                         <div class="mb-3">
                             <label for="payment_method" class="form-label">Payment Method</label>
-                            <select class="form-select" id="payment_method" name="payment_method" required>
-                                <option value="Cash">Cash</option>
-                                <option value="Card">Card</option>
-                                <option value="Mobile Money">Mobile Money</option>
-                            </select>
+                            <input type="hidden" name="payment_method" value="Bank Deposit">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-university"></i> <strong>Bank Deposit Only</strong><br>
+                                <small>Please deposit to:</small><br>
+                                <strong>Bank:</strong> Zanaco Bank Zambia<br>
+                                <strong>Account:</strong> 5823001300137<br>
+                                <strong>Account Name:</strong> ZCAS University - Library Fees Collection<br>
+                                <small class="text-muted">Use your Member ID: <strong>{{ member.member_id }}</strong> as
+                                    reference</small>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="renewal_date" class="form-label">Renewal Date</label>
                             <input type="date" class="form-control" id="renewal_date" name="renewal_date"
                                 value="{{ now.strftime('%Y-%m-%d') }}">
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i> <strong>Payment Instructions:</strong>
+                            After submitting, please make a bank deposit using the account details above.
+                            Use your Member ID as the reference.
                         </div>
 
                         <div class="d-grid gap-2">

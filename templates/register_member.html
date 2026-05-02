@@ -77,11 +77,15 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="payment_method" class="form-label">Payment Method</label>
-                                <select class="form-select" id="payment_method" name="payment_method">
-                                    <option value="Cash">Cash</option>
-                                    <option value="Card">Card</option>
-                                    <option value="Mobile Money">Mobile Money</option>
-                                </select>
+                                <input type="hidden" name="payment_method" value="Bank Deposit">
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-university"></i> <strong>Bank Deposit Only</strong><br>
+                                    <small>Please deposit to:</small><br>
+                                    <strong>Bank:</strong> Zanaco Bank Zambia<br>
+                                    <strong>Account:</strong> 5823001300137<br>
+                                    <strong>Account Name:</strong> ZCAS University - Library Fees Collection<br>
+                                    <small class="text-muted">Use your Member ID as reference after registration</small>
+                                </div>
                             </div>
                         </div>
 
@@ -94,6 +98,12 @@
                         <div class="alert alert-info" id="feeDisplay">
                             <strong>Fee Summary:</strong>
                             <span id="feeAmount">Calculating...</span>
+                        </div>
+
+                        <div class="alert alert-warning mt-2">
+                            <i class="fas fa-info-circle"></i> <strong>Payment Instructions:</strong>
+                            After registration, please make a bank deposit using the account details above.
+                            Use your Member ID as the reference. The quotation will be available for download.
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
