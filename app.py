@@ -166,7 +166,7 @@ def init_database():
             db.create_all()
             print("✅ Database tables checked/created successfully")
 
-            # Add id_printed column if it doesn't exist (for existing databases)
+            # Add id_printed column if it doesn't exist
             try:
                 with db.engine.connect() as conn:
                     conn.execute(
@@ -190,11 +190,6 @@ def init_database():
                 print(
                     f"✅ Created upload folder: {app.config['UPLOAD_FOLDER']}")
 
-            # Clear any orphaned sessions (optional - helps with testing)
-            # db.session.query(CurrentSession).delete()
-            # db.session.commit()
-            # print("✅ Cleared existing sessions")
-
             return True
     except Exception as e:
         print(f"❌ Database initialization error: {e}")
@@ -210,7 +205,6 @@ def allowed_file(filename):
 
 
 def resize_image(image_path, output_size=(150, 150)):
-    """Resize image to specified dimensions"""
     try:
         with PILImage.open(image_path) as img:
             if img.mode in ('RGBA', 'LA', 'P'):
@@ -768,12 +762,7 @@ def mark_id_printed(member_id):
         member = Member.query.get_or_404(member_id)
         member.id_printed = True
         db.session.commit()
-
-        return jsonify({
-            'success': True,
-            'message': 'ID card marked as printed',
-            'id_printed': member.id_printed
-        })
+        return jsonify({'success': True, 'message': 'ID card marked as printed', 'id_printed': member.id_printed})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -785,12 +774,7 @@ def mark_id_not_printed(member_id):
         member = Member.query.get_or_404(member_id)
         member.id_printed = False
         db.session.commit()
-
-        return jsonify({
-            'success': True,
-            'message': 'ID card marked as not printed',
-            'id_printed': member.id_printed
-        })
+        return jsonify({'success': True, 'message': 'ID card marked as not printed', 'id_printed': member.id_printed})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -801,7 +785,6 @@ def print_quotation(payment_id):
     try:
         payment = Payment.query.get_or_404(payment_id)
         member = payment.member
-
         return render_template('print_quotation.html',
                                payment=payment,
                                member=member,
@@ -847,7 +830,6 @@ def view_payments():
     try:
         payments = Payment.query.order_by(Payment.payment_date.desc()).all()
         total_revenue = sum(payment.amount for payment in payments)
-
         return render_template('payments.html',
                                payments=payments,
                                total_revenue=total_revenue,
@@ -864,15 +846,12 @@ def reports():
         total_members = Member.query.count()
         active_members = Member.query.filter_by(status='active').count()
         expired_members = Member.query.filter_by(status='expired').count()
-
         payments = Payment.query.all()
         total_revenue = sum(payment.amount for payment in payments)
-
         monthly_members = Member.query.filter_by(
             membership_type='monthly').count()
         six_months_members = Member.query.filter_by(
             membership_type='six_months').count()
-
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         recent_registrations = Member.query.filter(
             Member.registration_date >= thirty_days_ago).count()
@@ -885,7 +864,6 @@ def reports():
                                monthly_members=monthly_members,
                                six_months_members=six_months_members,
                                recent_registrations=recent_registrations)
-
     except Exception as e:
         flash(f'Error generating reports: {str(e)}', 'error')
         return render_template('reports.html',
@@ -970,11 +948,15 @@ def api_scan_rfid():
                 'expiry_date': member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else None
             }), 403
 
-        # Check current session - THIS DETERMINES CHECK IN vs CHECK OUT
+        # Check current session - KEY LOGIC FOR CHECK IN/OUT
+        # Use a fresh query to avoid any caching issues
+        db.session.expire_all()
         current_session = CurrentSession.query.filter_by(
             member_id=member.id).first()
 
         print(f"🔑 Current session exists: {current_session is not None}")
+        if current_session:
+            print(f"   Session check_in_time: {current_session.check_in_time}")
 
         photo_url = None
         if member.photo_path:
@@ -982,7 +964,7 @@ def api_scan_rfid():
                 'static', filename=f'uploads/{member.photo_path}', _external=True)
 
         if current_session:
-            # Member has an active session - they are CHECKING OUT (leaving the library)
+            # Member has an active session - CHECK OUT (leaving the library)
             check_out_time = datetime.utcnow()
             duration_minutes = int(
                 (check_out_time - current_session.check_in_time).total_seconds() / 60)
@@ -1014,7 +996,7 @@ def api_scan_rfid():
                 'check_out_time': check_out_time.strftime('%I:%M %p')
             })
         else:
-            # No active session - they are CHECKING IN (entering the library)
+            # No active session - CHECK IN (entering the library)
             new_session = CurrentSession(member_id=member.id)
             db.session.add(new_session)
 
@@ -1089,13 +1071,7 @@ def api_assign_rfid_to_member():
 
         member.rfid_uid = rfid_uid
         db.session.commit()
-
-        return jsonify({
-            'success': True,
-            'message': 'RFID assigned successfully',
-            'member_name': member.full_name,
-            'member_id': member.member_id
-        })
+        return jsonify({'success': True, 'message': 'RFID assigned successfully', 'member_name': member.full_name, 'member_id': member.member_id})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -1127,7 +1103,6 @@ def api_search_members():
                 'rfid_assigned': bool(member.rfid_uid),
                 'id_printed': member.id_printed
             })
-
         return jsonify({'success': True, 'members': members_data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1149,12 +1124,7 @@ def api_current_members():
                 'check_in_time': session.check_in_time.strftime('%Y-%m-%d %I:%M %p'),
                 'duration_minutes': int((datetime.utcnow() - session.check_in_time).total_seconds() / 60)
             })
-
-        return jsonify({
-            'success': True,
-            'count': len(members_in_library),
-            'members': members_in_library
-        })
+        return jsonify({'success': True, 'count': len(members_in_library), 'members': members_in_library})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -1239,6 +1209,30 @@ def api_access_logs():
         })
     except Exception as e:
         print(f"Error in api_access_logs: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# Add a debug endpoint to check current sessions (for troubleshooting)
+@app.route('/api/debug_sessions')
+@login_required
+def debug_sessions():
+    """Debug endpoint to check current sessions"""
+    try:
+        sessions = CurrentSession.query.all()
+        session_data = []
+        for session in sessions:
+            member = session.member
+            session_data.append({
+                'member_id': member.member_id,
+                'member_name': member.full_name,
+                'check_in_time': session.check_in_time.strftime('%Y-%m-%d %H:%M:%S')
+            })
+        return jsonify({
+            'success': True,
+            'active_sessions_count': len(sessions),
+            'sessions': session_data
+        })
+    except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
