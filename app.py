@@ -109,7 +109,6 @@ class Member(db.Model):
     expiry_date = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default='active')
     rfid_uid = db.Column(db.String(50), unique=True, nullable=True)
-    # Track if ID card has been printed
     id_printed = db.Column(db.Boolean, default=False)
 
     payments = db.relationship('Payment', backref='member', lazy=True)
@@ -186,11 +185,15 @@ def init_database():
             else:
                 print("✅ Admin user already exists")
 
-            # Check if upload folder exists
             if not os.path.exists(app.config['UPLOAD_FOLDER']):
                 os.makedirs(app.config['UPLOAD_FOLDER'])
                 print(
                     f"✅ Created upload folder: {app.config['UPLOAD_FOLDER']}")
+
+            # Clear any orphaned sessions (optional - helps with testing)
+            # db.session.query(CurrentSession).delete()
+            # db.session.commit()
+            # print("✅ Cleared existing sessions")
 
             return True
     except Exception as e:
@@ -210,14 +213,10 @@ def resize_image(image_path, output_size=(150, 150)):
     """Resize image to specified dimensions"""
     try:
         with PILImage.open(image_path) as img:
-            # Convert to RGB if necessary
             if img.mode in ('RGBA', 'LA', 'P'):
                 img = img.convert('RGB')
             img.thumbnail(output_size, PILImage.Resampling.LANCZOS)
-
-            # Create a new image with the exact dimensions
             new_img = PILImage.new('RGB', output_size, (255, 255, 255))
-            # Paste the resized image centered
             offset = ((output_size[0] - img.size[0]) //
                       2, (output_size[1] - img.size[1]) // 2)
             new_img.paste(img, offset)
@@ -240,7 +239,6 @@ def generate_receipt_number():
 
 
 def calculate_total_fees(membership_type, duration_months=1):
-    """Calculate total fees based on membership type and duration"""
     if membership_type == 'monthly':
         membership_fee = FEE_STRUCTURE['monthly'] * duration_months
     elif membership_type == 'six_months':
@@ -295,11 +293,9 @@ def dashboard():
             Member.status == 'expired').count()
         current_in_library = CurrentSession.query.count()
 
-        # Get recent members for dashboard display
         members = Member.query.order_by(
             Member.registration_date.desc()).limit(10).all()
 
-        # Calculate revenue stats
         payments = Payment.query.all()
         monthly_revenue = 0
         six_months_revenue = 0
@@ -313,7 +309,6 @@ def dashboard():
                 six_months_revenue += payment.amount
             total_revenue += payment.amount
 
-        # Get membership type counts
         monthly_members = Member.query.filter_by(
             membership_type='monthly').count()
         six_months_members = Member.query.filter_by(
@@ -381,21 +376,15 @@ def scan_member():
     return render_template('scan_member.html')
 
 
-# ========== ACCESS LOGS PAGE ROUTE ==========
-
 @app.route('/access_logs')
 @login_required
 def access_logs():
-    """View access logs page"""
     return render_template('access_logs.html')
 
-
-# ========== CALENDAR ROUTES ==========
 
 @app.route('/calendar')
 @login_required
 def calendar_view():
-    """Calendar view for membership expiries and registrations"""
     try:
         members = Member.query.all()
         calendar_events = []
@@ -471,7 +460,6 @@ def calendar_view():
 @app.route('/member_details/<int:member_id>')
 @login_required
 def member_details(member_id):
-    """View member details"""
     try:
         member = Member.query.get_or_404(member_id)
         payments = Payment.query.filter_by(member_id=member_id).order_by(
@@ -490,7 +478,6 @@ def member_details(member_id):
 @app.route('/renew_member/<int:member_id>', methods=['GET', 'POST'])
 @login_required
 def renew_member(member_id):
-    """Renew member membership"""
     member = Member.query.get_or_404(member_id)
 
     if request.method == 'GET':
@@ -521,7 +508,6 @@ def renew_member(member_id):
             except (ValueError, TypeError):
                 duration_months = 1
 
-            # Calculate renewal fee
             if renew_period == 'monthly':
                 renewal_fee = FEE_STRUCTURE['monthly'] * duration_months
                 new_expiry = renewal_date + \
@@ -538,7 +524,6 @@ def renew_member(member_id):
             member.status = 'active'
             member.membership_type = renew_period
 
-            # Create payment record
             receipt_number = generate_receipt_number()
             payment = Payment(
                 receipt_number=receipt_number,
@@ -600,12 +585,10 @@ def register_member():
             payment_method = request.form.get('payment_method', 'Cash')
             nationality = request.form.get('nationality', 'Zambian')
 
-            # Validate required fields
             if not all([full_name, email, phone, address, nrc_number, membership_type]):
                 flash('Please fill in all required fields', 'error')
                 return render_template('register_member.html')
 
-            # Convert duration_months to int
             try:
                 duration_months = int(duration_months)
                 if duration_months < 1:
@@ -615,14 +598,12 @@ def register_member():
             except (ValueError, TypeError):
                 duration_months = 1
 
-            # Calculate fees
             fees = calculate_total_fees(membership_type, duration_months)
 
             member_id = generate_member_id()
             registration_date = datetime.utcnow()
             receipt_number = generate_receipt_number()
 
-            # Handle photo upload
             photo_file = request.files.get('photo')
             photo_filename = None
             if photo_file and photo_file.filename:
@@ -634,7 +615,6 @@ def register_member():
                         app.config['UPLOAD_FOLDER'], photo_filename)
                     photo_file.save(photo_path)
 
-                    # Resize the image to standard size
                     try:
                         resize_image(photo_path, output_size=(150, 150))
                         print(f"✅ Photo resized and saved: {photo_filename}")
@@ -645,7 +625,6 @@ def register_member():
                         'Invalid file type. Please upload PNG, JPG, or JPEG images only.', 'error')
                     return render_template('register_member.html')
 
-            # Create member
             member = Member(
                 member_id=member_id,
                 full_name=full_name,
@@ -661,10 +640,9 @@ def register_member():
                 registration_date=registration_date,
                 status='active',
                 rfid_uid=None,
-                id_printed=False  # New member starts with ID not printed
+                id_printed=False
             )
 
-            # Set expiry date
             if membership_type == 'monthly':
                 member.expiry_date = registration_date + \
                     timedelta(days=30 * fees['duration_months'])
@@ -677,7 +655,6 @@ def register_member():
             db.session.add(member)
             db.session.flush()
 
-            # Create payment record
             payment = Payment(
                 receipt_number=receipt_number,
                 member_id=member.id,
@@ -718,7 +695,6 @@ def register_member():
 @app.route('/edit_member/<int:member_id>', methods=['GET', 'POST'])
 @login_required
 def edit_member(member_id):
-    """Edit member information"""
     member = Member.query.get_or_404(member_id)
 
     if request.method == 'POST':
@@ -733,11 +709,9 @@ def edit_member(member_id):
             if nrc_number:
                 member.nrc_number = nrc_number
 
-            # Handle photo upload
             photo_file = request.files.get('photo')
             if photo_file and photo_file.filename:
                 if allowed_file(photo_file.filename):
-                    # Delete old photo if exists
                     if member.photo_path:
                         old_photo_path = os.path.join(
                             app.config['UPLOAD_FOLDER'], member.photo_path)
@@ -751,7 +725,6 @@ def edit_member(member_id):
                         app.config['UPLOAD_FOLDER'], photo_filename)
                     photo_file.save(photo_path)
 
-                    # Resize the image
                     try:
                         resize_image(photo_path, output_size=(150, 150))
                     except Exception as resize_error:
@@ -775,7 +748,6 @@ def edit_member(member_id):
 @app.route('/print_id/<int:member_id>')
 @login_required
 def print_id(member_id):
-    """Print ID card for member"""
     member = Member.query.get_or_404(member_id)
 
     try:
@@ -789,12 +761,9 @@ def print_id(member_id):
         return redirect(url_for('member_details', member_id=member.id))
 
 
-# ========== ID CARD PRINTING STATUS API ENDPOINTS ==========
-
 @app.route('/api/mark_id_printed/<int:member_id>', methods=['POST'])
 @login_required
 def mark_id_printed(member_id):
-    """Mark that the ID card has been printed"""
     try:
         member = Member.query.get_or_404(member_id)
         member.id_printed = True
@@ -812,7 +781,6 @@ def mark_id_printed(member_id):
 @app.route('/api/mark_id_not_printed/<int:member_id>', methods=['POST'])
 @login_required
 def mark_id_not_printed(member_id):
-    """Mark that the ID card has NOT been printed"""
     try:
         member = Member.query.get_or_404(member_id)
         member.id_printed = False
@@ -830,7 +798,6 @@ def mark_id_not_printed(member_id):
 @app.route('/print_quotation/<int:payment_id>')
 @login_required
 def print_quotation(payment_id):
-    """Print quotation for payment"""
     try:
         payment = Payment.query.get_or_404(payment_id)
         member = payment.member
@@ -874,12 +841,9 @@ def auto_check_expiry():
     return redirect(url_for('view_members'))
 
 
-# ========== PAYMENTS AND REPORTS ROUTES ==========
-
 @app.route('/payments')
 @login_required
 def view_payments():
-    """View all payments"""
     try:
         payments = Payment.query.order_by(Payment.payment_date.desc()).all()
         total_revenue = sum(payment.amount for payment in payments)
@@ -896,7 +860,6 @@ def view_payments():
 @app.route('/reports')
 @login_required
 def reports():
-    """Generate reports"""
     try:
         total_members = Member.query.count()
         active_members = Member.query.filter_by(status='active').count()
@@ -939,6 +902,10 @@ def api_scan_rfid():
         data = request.get_json()
         scanned_id = data.get('rfid_uid', '').strip()
 
+        print(f"\n{'='*50}")
+        print(f"🔍 SCAN REQUEST: {scanned_id}")
+        print(f"{'='*50}")
+
         if not scanned_id:
             return jsonify({
                 'success': False,
@@ -951,10 +918,13 @@ def api_scan_rfid():
             member = Member.query.filter_by(member_id=scanned_id).first()
 
         if not member:
+            print(f"❌ Member not found: {scanned_id}")
             return jsonify({
                 'success': False,
                 'message': f'No member found with ID: {scanned_id}'
             }), 404
+
+        print(f"✅ Member found: {member.full_name} ({member.member_id})")
 
         # Check membership expiry
         today = datetime.utcnow().date()
@@ -965,10 +935,13 @@ def api_scan_rfid():
             expiry_date = member.expiry_date.date()
             days_remaining = (expiry_date - today).days
             is_expired = days_remaining < 0
+            print(
+                f"📅 Expiry date: {expiry_date}, Days remaining: {days_remaining}, Expired: {is_expired}")
 
             if is_expired and member.status == 'active':
                 member.status = 'expired'
                 db.session.commit()
+                print(f"⚠️ Member status updated to EXPIRED")
 
         # Block expired members
         if is_expired:
@@ -981,12 +954,12 @@ def api_scan_rfid():
             db.session.add(log)
             db.session.commit()
 
-            # Get photo URL
             photo_url = None
             if member.photo_path:
                 photo_url = url_for(
                     'static', filename=f'uploads/{member.photo_path}', _external=True)
 
+            print(f"🚫 ACCESS DENIED - Membership expired")
             return jsonify({
                 'success': False,
                 'is_expired': True,
@@ -997,18 +970,19 @@ def api_scan_rfid():
                 'expiry_date': member.expiry_date.strftime('%Y-%m-%d') if member.expiry_date else None
             }), 403
 
-        # Check current session
+        # Check current session - THIS DETERMINES CHECK IN vs CHECK OUT
         current_session = CurrentSession.query.filter_by(
             member_id=member.id).first()
 
-        # Get photo URL
+        print(f"🔑 Current session exists: {current_session is not None}")
+
         photo_url = None
         if member.photo_path:
             photo_url = url_for(
                 'static', filename=f'uploads/{member.photo_path}', _external=True)
 
         if current_session:
-            # Check out
+            # Member has an active session - they are CHECKING OUT (leaving the library)
             check_out_time = datetime.utcnow()
             duration_minutes = int(
                 (check_out_time - current_session.check_in_time).total_seconds() / 60)
@@ -1023,6 +997,10 @@ def api_scan_rfid():
             db.session.delete(current_session)
             db.session.commit()
 
+            print(
+                f"🚪 CHECK OUT: {member.full_name} - Duration: {duration_minutes} minutes")
+            print(f"{'='*50}\n")
+
             return jsonify({
                 'success': True,
                 'action': 'check_out',
@@ -1036,7 +1014,7 @@ def api_scan_rfid():
                 'check_out_time': check_out_time.strftime('%I:%M %p')
             })
         else:
-            # Check in
+            # No active session - they are CHECKING IN (entering the library)
             new_session = CurrentSession(member_id=member.id)
             db.session.add(new_session)
 
@@ -1048,6 +1026,9 @@ def api_scan_rfid():
             )
             db.session.add(log)
             db.session.commit()
+
+            print(f"🚪 CHECK IN: {member.full_name} - Session created")
+            print(f"{'='*50}\n")
 
             return jsonify({
                 'success': True,
@@ -1064,7 +1045,7 @@ def api_scan_rfid():
             })
 
     except Exception as e:
-        print(f"Error in scan_rfid: {e}")
+        print(f"❌ Error in scan_rfid: {e}")
         traceback.print_exc()
         return jsonify({
             'success': False,
@@ -1074,7 +1055,6 @@ def api_scan_rfid():
 
 @app.route('/api/check_rfid/<rfid_uid>')
 def api_check_rfid(rfid_uid):
-    """Check if RFID card is already assigned to a member"""
     try:
         member = Member.query.filter_by(rfid_uid=rfid_uid).first()
         if member:
@@ -1091,7 +1071,6 @@ def api_check_rfid(rfid_uid):
 @app.route('/api/assign_rfid_to_member', methods=['POST'])
 @login_required
 def api_assign_rfid_to_member():
-    """Assign RFID card to a member"""
     try:
         data = request.get_json()
         member_id = data.get('member_id')
@@ -1100,7 +1079,6 @@ def api_assign_rfid_to_member():
         if not member_id or not rfid_uid:
             return jsonify({'success': False, 'message': 'Missing member ID or RFID UID'}), 400
 
-        # Check if RFID is already assigned
         existing = Member.query.filter_by(rfid_uid=rfid_uid).first()
         if existing and existing.id != member_id:
             return jsonify({'success': False, 'message': f'RFID already assigned to {existing.full_name}'}), 400
@@ -1125,7 +1103,6 @@ def api_assign_rfid_to_member():
 @app.route('/api/search_members')
 @login_required
 def api_search_members():
-    """Search members by name, ID, or NRC"""
     try:
         query = request.args.get('q', '').strip()
         if not query:
@@ -1148,7 +1125,7 @@ def api_search_members():
                 'nrc_number': member.nrc_number,
                 'photo_path': member.photo_path,
                 'rfid_assigned': bool(member.rfid_uid),
-                'id_printed': member.id_printed  # Include ID printed status
+                'id_printed': member.id_printed
             })
 
         return jsonify({'success': True, 'members': members_data})
@@ -1159,7 +1136,6 @@ def api_search_members():
 @app.route('/api/current_members')
 @login_required
 def api_current_members():
-    """Get all members currently in the library"""
     try:
         sessions = CurrentSession.query.all()
         members_in_library = []
@@ -1186,7 +1162,6 @@ def api_current_members():
 @app.route('/api/access_logs')
 @login_required
 def api_access_logs():
-    """Get access logs with filtering"""
     try:
         status = request.args.get('status', 'all')
         user_query = request.args.get('user', '').strip()

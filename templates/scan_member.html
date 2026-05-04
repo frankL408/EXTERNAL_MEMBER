@@ -453,7 +453,7 @@
                                 <th>Card ID</th>
                                 <th>Status</th>
                                 <th>Details</th>
-                                </td>
+                            </tr>
                         </thead>
                         <tbody id="logsDropdownBody">
                             <tr>
@@ -538,16 +538,13 @@
 
             let statusBadge = '';
             let statusMessage = '';
-            let statusColor = '';
 
             if (isCheckIn) {
-                statusBadge = '<span class="badge bg-success badge-status-large"><i class="fas fa-sign-in-alt"></i> CHECKED IN</span>';
+                statusBadge = '<span class="badge bg-success badge-status-large"><i class="fas fa-sign-in-alt"></i> ✓ CHECKED IN</span>';
                 statusMessage = memberData.message || 'Welcome! You have been checked in successfully.';
-                statusColor = 'success';
             } else {
-                statusBadge = '<span class="badge bg-warning text-dark badge-status-large"><i class="fas fa-sign-out-alt"></i> CHECKED OUT</span>';
+                statusBadge = '<span class="badge bg-warning text-dark badge-status-large"><i class="fas fa-sign-out-alt"></i> ✓ CHECKED OUT</span>';
                 statusMessage = memberData.message || 'Goodbye! You have been checked out successfully.';
-                statusColor = 'warning';
             }
 
             const photoHtml = memberData.photo_path ?
@@ -596,12 +593,11 @@
             `;
             displayDiv.innerHTML = html;
 
-            // Log for debugging
-            console.log('Member scan:', {
-                action: memberData.action,
-                name: memberData.full_name,
-                status: isCheckIn ? 'CHECKED IN' : 'CHECKED OUT'
-            });
+            // Log for debugging - check browser console (F12)
+            console.log('%c📋 SCAN RESULT:', 'font-weight: bold; color: blue;');
+            console.log('Action:', memberData.action);
+            console.log('Member:', memberData.full_name);
+            console.log('Status Display:', isCheckIn ? 'CHECKED IN ✓' : 'CHECKED OUT ✓');
         }
 
         function displayEmptyMemberDisplay() {
@@ -847,7 +843,7 @@
             }, 4000);
         }
 
-        // Access Mode Functions
+        // Access Mode Functions - FIXED to correctly handle check-in/check-out
         async function processEntranceScan(scannedValue) {
             if (!scannedValue.trim()) {
                 showTemporaryMessage('Please scan or enter a card ID', 'danger');
@@ -865,7 +861,10 @@
 
                 const data = await response.json();
 
-                console.log('Scan response:', data); // Debug log
+                // Debug log - Open browser console (F12) to see this
+                console.log('%c📡 API RESPONSE:', 'font-weight: bold; color: purple;');
+                console.log('Action received from backend:', data.action);
+                console.log('Full response:', data);
 
                 if (response.ok && data.success) {
                     // Display using the complete member data which includes action
@@ -889,7 +888,6 @@
         }
 
         function showTemporaryMessage(msg, type) {
-            // Remove existing temporary messages
             const existingMessages = document.querySelectorAll('.temp-message');
             existingMessages.forEach(msg => msg.remove());
 
